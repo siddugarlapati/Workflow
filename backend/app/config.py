@@ -1,6 +1,7 @@
 """
-WorkFlow — Application Settings
+Aegis — Application Settings
 Uses pydantic-settings for type-safe, validated configuration.
+Only requires GEMINI_API_KEY and JWT_SECRET to be set.
 """
 from functools import lru_cache
 from typing import Literal, Optional
@@ -16,30 +17,22 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # ── Supabase ───────────────────────────────────────────────────────────────
-    supabase_url: str
-    supabase_anon_key: str
-    supabase_service_role_key: str
-    database_url: str  # asyncpg connection string
+    # ── Database ───────────────────────────────────────────────────────────────
+    database_url: str = "sqlite+aiosqlite:///./workflow.db"
 
     # ── Auth ───────────────────────────────────────────────────────────────────
     jwt_secret: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 1440  # 24 hours
 
-    # ── Ollama ─────────────────────────────────────────────────────────────────
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "llama3.2:3b"
-    ollama_embedding_model: str = "nomic-embed-text"
-
-    # ── Gemini ─────────────────────────────────────────────────────────────────
+    # ── Gemini AI (only AI provider) ───────────────────────────────────────────
     gemini_api_key: Optional[str] = None
 
     # ── App ────────────────────────────────────────────────────────────────────
     app_env: Literal["development", "production", "test"] = "development"
     app_host: str = "0.0.0.0"
-    app_port: int = 8000
-    frontend_url: str = "http://localhost:8501"
+    app_port: int = 8005
+    frontend_url: str = "http://localhost:5173"
 
     # ── Logging ────────────────────────────────────────────────────────────────
     log_level: str = "INFO"
@@ -52,22 +45,17 @@ class Settings(BaseSettings):
     def cors_origins(self) -> list[str]:
         return [
             self.frontend_url,
-            "http://localhost:8501",
-            "http://127.0.0.1:8501",
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "https://workflow-platform-ashen.vercel.app",
-            "https://workflow-platform-ashen.vercel.app/",
-            "https://workflow-platform-ashen.vercel.app:443",
-            "https://workflow-platform-9crmi70wo-siddugarlapati09-gmailcoms-projects.vercel.app",
-            "https://workflow-platform-9crmi70wo-siddugarlapati09-gmailcoms-projects.vercel.app/",
+            "http://localhost:8005",
+            "http://127.0.0.1:8005",
         ]
 
 
 @lru_cache
 def get_settings() -> Settings:
     """Cached settings singleton — import this everywhere."""
-    return Settings()  # type: ignore[call-arg]
+    return Settings()
 
 
 settings = get_settings()

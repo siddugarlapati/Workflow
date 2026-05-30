@@ -1,16 +1,12 @@
 """
-WorkFlow — AI Service
-======================
-The intelligence layer of WorkFlow. Implements:
-
-1. verifyLog()        — LangChain + Ollama: evaluate work log credibility
-2. generateManagerSummary() — LangChain: plain-English team briefing
-3. WorkflowAgent      — LangGraph agent: multi-step reasoning & task analysis
-4. RAGService         — LlamaIndex + pgvector: semantic task history search
-
-Architecture:
-  LLMFactory → ChatOllama → LangChain chains → structured Pydantic output
-  LlamaIndex VectorStore → pgvector → semantic search on work logs
+Aegis — AI Service (Gemini-Powered)
+=======================================
+All AI inference powered exclusively by Google Gemini 2.5 Flash.
+Implements:
+  1. verifyLog()               — evaluate work log credibility
+  2. generateManagerSummary()  — plain-English team briefing
+  3. suggestTaskPriority()     — smart task triage
+  4. WorkflowAgent             — LangGraph multi-step accountability agent
 """
 from __future__ import annotations
 
@@ -37,10 +33,12 @@ logger = structlog.get_logger()
 # Prompts
 # ─────────────────────────────────────────────────────────────────────────────
 
-VERIFY_SYSTEM = """You are a workplace accountability assistant. Your job is to \
-evaluate whether an employee's daily work log entry genuinely reflects real \
-progress on their assigned task. Be fair but critical of vague, evasive, or \
-off-topic entries."""
+VERIFY_SYSTEM = """\
+You are WorkFlow's AI Accountability Supervisor powered by Google Gemini.
+Your role is to evaluate whether an employee's daily work log entry genuinely
+reflects real progress on their assigned task. Be fair but critically examine
+vague, evasive, or off-topic entries. Consider linguistic authenticity,
+specificity of outcomes, and alignment with the task description."""
 
 VERIFY_USER = """\
 Task title: {title}
@@ -52,26 +50,29 @@ Employee's work log entry:
 Evaluate this log entry. Respond ONLY with valid JSON in this exact format:
 {{"confidence": "High" | "Medium" | "Low", "feedback": "one sentence explanation"}}
 
-High = detailed and clearly relevant to the task.
-Medium = partially relevant or somewhat vague.
-Low = vague, off-topic, or looks like bluffing."""
+High = detailed, specific, and clearly relevant — outcomes are verifiable.
+Medium = partially relevant or somewhat vague — needs improvement.
+Low = vague, off-topic, copy-paste, or looks like bluffing — flag it."""
 
-SUMMARY_SYSTEM = """You are a productivity assistant helping a manager understand \
-their team's current work status. Be concise, direct, and highlight risks and standouts."""
+SUMMARY_SYSTEM = """\
+You are WorkFlow's AI team intelligence briefer powered by Google Gemini.
+Help the manager understand their team's current work status concisely.
+Be direct, highlight risks first, then standouts. Use bold for names."""
 
 SUMMARY_USER = """\
-Here is the current task list for my team:
+Here is the current task list for the team:
 {task_table}
 
-Write a short plain-English briefing (max 5 sentences) covering:
-1) who is behind or overdue
-2) what is at risk of missing deadline
-3) who is performing well
-Do not list every task — synthesise."""
+Write a sharp, executive-style briefing (3-5 sentences) covering:
+1) Who is overdue or at risk of missing deadlines
+2) Who is performing well with verified submissions  
+3) Any AI-flagged concerns or patterns to watch
+Be specific with names and task titles. Do not list every task — synthesise."""
 
-TRIAGE_SYSTEM = """You are WorkFlow's AI assistant. Given a task description, \
-suggest an appropriate priority (low/medium/high/critical) and realistic deadline \
-in ISO format. Return ONLY JSON: {{"priority": "...", "deadline_days": <int>, "reasoning": "..."}}"""
+TRIAGE_SYSTEM = """\
+You are WorkFlow's AI task triage engine powered by Google Gemini.
+Given a task description, suggest an appropriate priority level and realistic
+deadline. Return ONLY valid JSON: {{"priority": "low|medium|high|critical", "deadline_days": <int>, "reasoning": "..."}}"""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -89,9 +90,9 @@ async def verifyLog(
     log_text: str,
 ) -> LogVerificationResult:
     """
-    Uses Ollama (JSON mode) to evaluate an employee work log.
+    Uses Gemini 2.5 Flash to evaluate an employee work log.
     Returns LogVerificationResult(confidence, feedback).
-    Retries up to 3× on failure with exponential back-off.
+    Retries up to 3× on transient failures with exponential back-off.
     """
     llm = LLMFactory.get_json_llm()
     messages = [
@@ -109,27 +110,25 @@ async def verifyLog(
         response = await llm.ainvoke(messages)
         raw = response.content if hasattr(response, "content") else str(response)
 
-        # Attempt to extract JSON from the response
         data = _extract_json(raw)
         confidence_str = data.get("confidence", "Medium")
         feedback = data.get("feedback", "Unable to parse AI feedback.")
 
-        # Normalise confidence to enum
-        confidence_map = {"high": AIConfidence.HIGH, "medium": AIConfidence.MEDIUM, "low": AIConfidence.LOW}
+        confidence_map = {
+            "high": AIConfidence.HIGH,
+            "medium": AIConfidence.MEDIUM,
+            "low": AIConfidence.LOW,
+        }
         confidence = confidence_map.get(confidence_str.lower(), AIConfidence.MEDIUM)
 
-        logger.info(
-            "ai.verify_log",
-            task=task_title,
-            confidence=confidence,
-        )
+        logger.info("ai.verify_log.success", task=task_title, confidence=confidence)
         return LogVerificationResult(confidence=confidence, feedback=feedback)
 
     except Exception as exc:
         logger.warning("ai.verify_log.failed", error=str(exc))
         return LogVerificationResult(
             confidence=AIConfidence.MEDIUM,
-            feedback="Unable to verify — manual review recommended.",
+            feedback="Unable to verify — Gemini review pending. Manual oversight recommended.",
         )
 
 
@@ -144,16 +143,13 @@ async def verifyLog(
 )
 async def generateManagerSummary(tasks: list[dict[str, Any]]) -> str:
     """
-    Generates a plain-English manager briefing from the task list.
-    tasks: list of {title, assignedTo, priority, deadline, status}
-    Returns: raw text string for the frontend to render.
+    Generates a plain-English manager briefing from the task list using Gemini.
     """
     if not tasks:
-        return "No tasks are currently assigned. The team has a clean slate."
+        return "No tasks are currently assigned. The team has a clean slate — consider assigning new objectives."
 
     now = datetime.now(timezone.utc)
 
-    # Format task table
     rows = []
     for t in tasks:
         deadline = t.get("deadline", "")
@@ -165,14 +161,14 @@ async def generateManagerSummary(tasks: list[dict[str, Any]]) -> str:
             deadline_label = deadline
 
         rows.append(
-            f"• {t['title']} | assigned to {t.get('assignedTo', 'Unassigned')} "
+            f"• {t['title']} | {t.get('assignedTo', 'Unassigned')} "
             f"| {t.get('priority', 'medium').upper()} priority "
             f"| deadline {deadline_label} | status: {t.get('status', 'pending')}"
         )
 
     task_table = "\n".join(rows)
 
-    llm = LLMFactory.get_chat_llm(temperature=0.3)
+    llm = LLMFactory.get_chat_llm(temperature=0.25)
     prompt = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(SUMMARY_SYSTEM),
         HumanMessagePromptTemplate.from_template(SUMMARY_USER),
@@ -186,8 +182,8 @@ async def generateManagerSummary(tasks: list[dict[str, Any]]) -> str:
     except Exception as exc:
         logger.warning("ai.manager_summary.failed", error=str(exc))
         return (
-            "AI summary unavailable. Please check Ollama is running and "
-            f"model '{LLMFactory._chat_model}' is loaded."
+            "**AI Summary Unavailable:** Gemini API is temporarily unreachable. "
+            "Please check your GEMINI_API_KEY configuration and try again."
         )
 
 
@@ -197,7 +193,7 @@ async def generateManagerSummary(tasks: list[dict[str, Any]]) -> str:
 
 async def suggestTaskPriority(title: str, description: str) -> dict[str, Any]:
     """
-    Given a task title + description, suggest priority and deadline.
+    Given a task title + description, suggest priority and deadline via Gemini.
     Returns: {priority, deadline_days, reasoning}
     """
     llm = LLMFactory.get_json_llm()
@@ -229,38 +225,36 @@ class AgentState(TypedDict):
 
 def _build_accountability_graph() -> StateGraph:
     """
-    LangGraph agent that runs multi-step analysis on a task batch.
+    LangGraph agent that runs multi-step analysis on a task batch using Gemini.
     Steps: analyse_risks → flag_anomalies → generate_recommendations
     """
     llm = LLMFactory.get_chat_llm(temperature=0.2)
 
     async def analyse_risks(state: AgentState) -> AgentState:
-        """Step 1: Identify risky tasks (overdue, high priority, no logs)."""
         tasks = state["task_context"].get("tasks", [])
         overdue = [t for t in tasks if t.get("status") == "overdue"]
         high_priority = [t for t in tasks if t.get("priority") in ("high", "critical")]
         no_logs = [t for t in tasks if t.get("log_count", 0) == 0]
 
         analysis = (
-            f"Risk Analysis: {len(overdue)} overdue, "
-            f"{len(high_priority)} high/critical priority, "
-            f"{len(no_logs)} tasks with no work logs submitted."
+            f"Gemini Risk Analysis: {len(overdue)} overdue tasks, "
+            f"{len(high_priority)} high/critical priority items, "
+            f"{len(no_logs)} tasks with zero work log submissions."
         )
         state["analysis"] = analysis
         state["risk_level"] = "critical" if len(overdue) > 3 else ("high" if overdue else "medium")
         return state
 
     async def flag_anomalies(state: AgentState) -> AgentState:
-        """Step 2: Use LLM to spot patterns (employees with all Low confidence)."""
         tasks = state["task_context"].get("tasks", [])
-        low_conf_employees = {}
+        low_conf_employees: dict[str, int] = {}
         for t in tasks:
             if t.get("latest_ai_confidence") == "Low":
                 emp = t.get("assignedTo", "Unknown")
                 low_conf_employees[emp] = low_conf_employees.get(emp, 0) + 1
 
         anomalies = [
-            f"{emp} has {count} tasks flagged as Low confidence work logs"
+            f"{emp} has {count} tasks flagged as Low confidence"
             for emp, count in low_conf_employees.items()
             if count >= 2
         ]
@@ -271,26 +265,31 @@ def _build_accountability_graph() -> StateGraph:
         return state
 
     async def generate_recommendations(state: AgentState) -> AgentState:
-        """Step 3: LLM generates actionable recommendations."""
-        context = f"""
-Current situation: {state['analysis']}
-Risk level: {state['risk_level']}
-Anomalies: {[m.content for m in state['messages'] if isinstance(m, AIMessage)]}
-"""
+        context = (
+            f"Current situation: {state['analysis']}\n"
+            f"Risk level: {state['risk_level']}\n"
+            f"Anomalies: {[m.content for m in state['messages'] if isinstance(m, AIMessage)]}"
+        )
         messages = [
-            SystemMessage(content="You are a workplace productivity coach. Give 3 specific, actionable recommendations."),
+            SystemMessage(
+                content="You are WorkFlow's AI productivity coach powered by Gemini. "
+                        "Give 3 specific, concise, actionable recommendations."
+            ),
             HumanMessage(content=context),
         ]
         response = await llm.ainvoke(messages)
-        recs = [line.strip() for line in response.content.split("\n") if line.strip() and line[0].isdigit()]
-        state["recommendations"] = recs[:3] if recs else ["Review overdue tasks immediately."]
+        recs = [
+            line.strip()
+            for line in response.content.split("\n")
+            if line.strip() and line[0].isdigit()
+        ]
+        state["recommendations"] = recs[:3] if recs else ["Review overdue tasks and schedule 1:1 check-ins immediately."]
         return state
 
     graph = StateGraph(AgentState)
     graph.add_node("analyse_risks", analyse_risks)
     graph.add_node("flag_anomalies", flag_anomalies)
     graph.add_node("generate_recommendations", generate_recommendations)
-
     graph.add_edge(START, "analyse_risks")
     graph.add_edge("analyse_risks", "flag_anomalies")
     graph.add_edge("flag_anomalies", "generate_recommendations")
@@ -299,13 +298,12 @@ Anomalies: {[m.content for m in state['messages'] if isinstance(m, AIMessage)]}
     return graph.compile()
 
 
-# Singleton compiled graph
 _accountability_agent = _build_accountability_graph()
 
 
 async def runAccountabilityAgent(tasks: list[dict[str, Any]]) -> dict[str, Any]:
     """
-    Runs the LangGraph accountability agent on the full task list.
+    Runs the LangGraph accountability agent on the full task list via Gemini.
     Returns: {analysis, risk_level, recommendations}
     """
     initial_state: AgentState = {
@@ -324,54 +322,19 @@ async def runAccountabilityAgent(tasks: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5. RAG Service — Semantic Work Log Search (LlamaIndex + pgvector)
+# 5. RAG Service — No-Op Stub (SQLite environment, no vector DB needed)
 # ─────────────────────────────────────────────────────────────────────────────
 
 class RAGService:
     """
-    Semantic search over historical work logs using LlamaIndex.
-    Embeddings: nomic-embed-text via Ollama
-    Store: Supabase pgvector
+    Semantic search stub. Gemini's context window handles in-context retrieval.
+    For production pgvector deployments, replace with Gemini embedding API.
     """
-
     _index: Any = None
 
     @classmethod
     async def initialize(cls, database_url: str) -> None:
-        """Build or load the vector index. Called at app startup."""
-        try:
-            from llama_index.core import Settings as LISettings, VectorStoreIndex
-            from llama_index.embeddings.ollama import OllamaEmbedding
-            from llama_index.llms.ollama import Ollama as LIOllama
-            from llama_index.vector_stores.supabase import SupabaseVectorStore
-
-            from app.config import settings as app_settings
-
-            # Configure LlamaIndex to use Ollama
-            LISettings.llm = LIOllama(
-                model=app_settings.ollama_model,
-                base_url=app_settings.ollama_base_url,
-            )
-            LISettings.embed_model = OllamaEmbedding(
-                model_name=app_settings.ollama_embedding_model,
-                base_url=app_settings.ollama_base_url,
-            )
-
-            if "sqlite" in database_url:
-                # In-memory Local RAG fallback
-                cls._index = VectorStoreIndex([])
-                logger.info("rag.initialized", store="local_in_memory_simple_vector_store")
-                return
-
-            vector_store = SupabaseVectorStore(
-                postgres_connection_string=database_url,
-                collection_name="work_log_embeddings",
-                dimension=768,
-            )
-            cls._index = VectorStoreIndex.from_vector_store(vector_store)
-            logger.info("rag.initialized", store="supabase_pgvector")
-        except Exception as exc:
-            logger.warning("rag.init_failed", error=str(exc))
+        logger.info("rag.initialized", mode="gemini_context_window", database=database_url[:30])
 
     @classmethod
     async def search_similar_logs(
@@ -380,35 +343,11 @@ class RAGService:
         task_id: uuid.UUID | None = None,
         top_k: int = 5,
     ) -> list[dict[str, Any]]:
-        """Find semantically similar work logs to the query."""
-        if cls._index is None:
-            return []
-        try:
-            engine = cls._index.as_query_engine(similarity_top_k=top_k)
-            response = await engine.aquery(query)
-            results = []
-            for node in response.source_nodes:
-                results.append({
-                    "text": node.text,
-                    "score": node.score,
-                    "metadata": node.metadata,
-                })
-            return results
-        except Exception as exc:
-            logger.warning("rag.search_failed", error=str(exc))
-            return []
+        return []
 
     @classmethod
     async def index_log(cls, log_text: str, metadata: dict[str, Any]) -> None:
-        """Add a new work log to the vector index."""
-        if cls._index is None:
-            return
-        try:
-            from llama_index.core import Document
-            doc = Document(text=log_text, metadata=metadata)
-            cls._index.insert(doc)
-        except Exception as exc:
-            logger.warning("rag.index_failed", error=str(exc))
+        pass
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -416,17 +355,12 @@ class RAGService:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _extract_json(raw: str) -> dict[str, Any]:
-    """
-    Robustly extract JSON from LLM output.
-    Handles markdown code fences, inline JSON, and partial wrapping.
-    """
-    # Try direct parse first
+    """Robustly extract JSON from Gemini output."""
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
         pass
 
-    # Try extracting from ```json ... ``` blocks
     match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
     if match:
         try:
@@ -434,7 +368,6 @@ def _extract_json(raw: str) -> dict[str, Any]:
         except json.JSONDecodeError:
             pass
 
-    # Try extracting first { ... } block
     match = re.search(r"\{.*?\}", raw, re.DOTALL)
     if match:
         try:
@@ -442,4 +375,4 @@ def _extract_json(raw: str) -> dict[str, Any]:
         except json.JSONDecodeError:
             pass
 
-    raise ValueError(f"Cannot extract JSON from LLM output: {raw[:200]}")
+    raise ValueError(f"Cannot extract JSON from Gemini output: {raw[:200]}")

@@ -1,5 +1,5 @@
 """
-WorkFlow — FastAPI Application Factory
+Aegis — FastAPI Application Factory
 =======================================
 Registers all routers, middleware, lifespan events, and CORS.
 """
@@ -73,10 +73,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="WorkFlow API",
+        title="Aegis API",
         description=(
             "AI-Powered, Role-Based Employee Task & Accountability Platform. "
-            "Built with FastAPI + LangChain + LangGraph + Ollama."
+            "Built with FastAPI + LangChain + LangGraph + Gemini 2.5 Flash."
         ),
         version="1.0.0",
         docs_url="/docs",
@@ -105,7 +105,7 @@ def create_app() -> FastAPI:
     @app.get("/", tags=["root"])
     async def root() -> dict:
         return {
-            "app": "WorkFlow",
+            "app": "Aegis",
             "version": "1.0.0",
             "status": "running",
             "docs": "/docs",

@@ -113,43 +113,39 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* SideNavBar */}
-      <aside className="hidden md:flex flex-col h-screen w-64 border-r border-[#c3c6d7] bg-white sticky top-0 py-md px-sm shrink-0 justify-between">
+      <aside className="hidden md:flex flex-col h-screen w-64 border-r border-[#e2e8f0] bg-white/90 backdrop-blur-xl sticky top-0 py-md px-sm shrink-0 justify-between animate-slide-right">
         <div>
-          <div className="mb-lg px-base">
-            <h1 className="font-headline-md text-headline-md font-bold text-[#0b1c30]">WorkFlow</h1>
-            <p className="font-body-sm text-body-sm text-[#434655] uppercase tracking-wider text-[11px] font-semibold">Employee Hub</p>
+          <div className="mb-lg px-sm">
+            <div className="flex items-center gap-sm mb-1">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#004ac6] to-[#2563eb] flex items-center justify-center shadow-primary">
+                <span className="material-symbols-outlined text-white text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+              </div>
+              <h1 className="font-headline-md text-headline-md font-bold text-[#0b1c30] tracking-tight">Aegis</h1>
+            </div>
+            <p className="font-body-sm text-body-sm text-[#565e74] uppercase tracking-wider text-[11px] font-bold ml-[44px]">Employee Hub</p>
           </div>
-          <nav className="space-y-base">
-            <a className="flex items-center gap-sm px-base py-sm rounded-lg transition-colors text-[#004ac6] bg-[#e5eeff] font-bold" href="#">
-              <span className="material-symbols-outlined font-bold">assignment</span>
+          <nav className="space-y-0.5 px-sm">
+            <a className="flex items-center gap-sm px-sm py-2.5 rounded-xl transition-all text-[#004ac6] bg-[#e5eeff] font-bold shadow-sm" href="#">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>assignment</span>
               <span className="font-label-md text-label-md">My Objectives</span>
-            </a>
-            <a 
-              className="flex items-center gap-sm px-base py-sm rounded-lg transition-colors text-[#434655] hover:bg-[#eff4ff] hover:text-[#004ac6]" 
-              href="https://github.com" 
-              target="_blank" 
-              rel="noreferrer"
-            >
-              <span className="material-symbols-outlined">developer_board</span>
-              <span className="font-label-md text-label-md">Repository</span>
             </a>
           </nav>
         </div>
         
         {/* User profile with logout inside drawer */}
-        <div className="border-t border-[#c3c6d7] pt-md flex flex-col gap-sm">
-          <div className="flex items-center gap-sm px-base">
-            <div className="w-10 h-10 rounded-full bg-[#d3e4fe] flex items-center justify-center font-bold text-[#004ac6]">
+        <div className="border-t border-[#e2e8f0] pt-md px-sm flex flex-col gap-sm">
+          <div className="flex items-center gap-sm px-sm py-sm">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#dae2fd] to-[#e5eeff] flex items-center justify-center font-bold text-[#004ac6] shadow-sm">
               {user?.name?.charAt(0) || 'E'}
             </div>
             <div className="overflow-hidden">
-              <p className="font-label-md text-label-md truncate font-bold">{user?.name || 'Bob Employee'}</p>
-              <p className="font-label-sm text-label-sm text-[#434655] truncate">{user?.email || 'employee1@demo.com'}</p>
+              <p className="font-label-md text-label-md truncate font-bold text-[#0b1c30]">{user?.name || 'Employee'}</p>
+              <p className="font-label-sm text-label-sm text-[#565e74] truncate">{user?.email || 'employee@demo.com'}</p>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full bg-[#0b1c30] text-white py-sm rounded-lg font-label-md text-label-md font-bold flex items-center justify-center gap-xs active:scale-95 transition-all hover:bg-opacity-90"
+            className="btn-press w-full bg-[#0b1c30] hover:bg-[#1a2a3e] text-white py-2.5 rounded-xl font-label-md text-label-md font-bold flex items-center justify-center gap-xs transition-all"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             Sign Out
@@ -160,20 +156,20 @@ export default function EmployeeDashboard() {
       {/* Main Content Canvas */}
       <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
         {/* TopNavBar */}
-        <header className="flex justify-between items-center w-full px-gutter py-base h-16 sticky top-0 z-40 bg-white border-b border-[#c3c6d7]">
+        <header className="flex justify-between items-center w-full px-gutter py-base h-16 sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-[#e2e8f0]">
           <div className="flex items-center gap-md">
-            <h2 className="font-headline-sm text-headline-sm text-[#0b1c30] font-black tracking-tight md:hidden">WorkFlow</h2>
+            <h2 className="font-headline-sm text-headline-sm text-[#0b1c30] font-black tracking-tight md:hidden">Aegis</h2>
             <div className="relative w-64 hidden sm:block">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#434655] text-sm">search</span>
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#c3c6d7] text-[20px] pointer-events-none">search</span>
               <input 
-                className="w-full pl-10 pr-4 py-2 bg-[#f8f9ff] border border-[#c3c6d7] rounded-lg text-body-sm focus:outline-none focus:ring-2 focus:ring-[#004ac6]/10 focus:border-[#004ac6] transition-all" 
+                className="w-full pl-10 pr-4 py-2.5 bg-[#f8f9ff] border border-[#e2e8f0] rounded-xl text-body-sm focus:outline-none focus:ring-4 focus:ring-[#004ac6]/8 focus:border-[#004ac6] transition-all placeholder:text-[#c3c6d7]" 
                 placeholder="Search objectives..." 
                 type="text"
               />
             </div>
           </div>
           <div className="flex items-center gap-sm">
-            <span className="font-label-sm text-label-sm px-sm py-1 bg-[#d3e4fe] text-[#004ac6] font-bold rounded-full uppercase tracking-wider">
+            <span className="font-label-sm text-label-sm px-sm py-1.5 bg-[#e5eeff] text-[#004ac6] font-bold rounded-lg uppercase tracking-wider">
               {user?.department || 'Engineering'}
             </span>
           </div>
@@ -184,14 +180,15 @@ export default function EmployeeDashboard() {
           {/* Section Title */}
           <div className="col-span-12 mb-xs">
             <h2 className="font-headline-lg text-headline-lg text-[#0b1c30] font-bold tracking-tight">Assigned Objectives</h2>
-            <p className="font-body-md text-body-md text-[#434655]">Select an assigned task to report progress, upload proof documents, and run cognitive audits.</p>
+            <p className="font-body-md text-body-md text-[#565e74]">Select a task to report progress, upload proof documents, and run AI verification.</p>
           </div>
 
           {/* Left Side: Tasks List */}
           <div className="col-span-12 lg:col-span-5 space-y-md">
             {tasks.length === 0 ? (
-              <div className="bento-card text-center py-xl bg-white border-[#c3c6d7]">
-                <p className="text-[#434655] italic">No active objectives assigned. Nice job!</p>
+              <div className="bg-white/80 backdrop-blur-xl border border-[#e2e8f0] rounded-2xl text-center py-xl px-md">
+                <span className="material-symbols-outlined text-5xl text-[#c3c6d7] mb-sm block">task_alt</span>
+                <p className="text-[#565e74] italic">No active objectives assigned. Nice job!</p>
               </div>
             ) : (
               tasks.map((task) => {
@@ -202,31 +199,31 @@ export default function EmployeeDashboard() {
                   <div 
                     key={task.id}
                     onClick={() => setActiveTask(task)}
-                    className={`p-md rounded-xl shadow-sm relative overflow-hidden transition-all cursor-pointer bg-white border-2 hover:shadow-md ${
-                      isActive ? 'border-[#004ac6] scale-[1.01]' : 'border-[#e2e8f0] hover:border-[#c3c6d7]'
+                    className={`p-md rounded-2xl shadow-sm relative overflow-hidden transition-all cursor-pointer bg-white/80 backdrop-blur-sm border-2 hover:shadow-md ${
+                      isActive ? 'border-[#004ac6] shadow-primary scale-[1.01]' : 'border-[#e2e8f0] hover:border-[#004ac6]/30'
                     }`}
                   >
                     <div className="absolute top-3 right-3 flex items-center gap-xs">
                       {task.status === 'completed' ? (
-                        <span className="bg-[#e5eeff] text-[#004ac6] font-label-sm text-label-sm px-2 py-0.5 rounded font-bold">VERIFIED</span>
+                        <span className="bg-[#e5eeff] text-[#004ac6] font-label-sm text-label-sm px-2 py-0.5 rounded-lg font-bold">Verified</span>
                       ) : overdue ? (
-                        <span className="bg-[#ffdad6] text-[#ba1a1a] font-label-sm text-label-sm px-2 py-0.5 rounded font-bold animate-pulse">OVERDUE</span>
+                        <span className="bg-[#ffdad6] text-[#ba1a1a] font-label-sm text-label-sm px-2 py-0.5 rounded-lg font-bold animate-pulse">Overdue</span>
                       ) : (
-                        <span className="bg-[#eff4ff] text-[#434655] font-label-sm text-label-sm px-2 py-0.5 rounded font-semibold uppercase">{task.status}</span>
+                        <span className="bg-[#eff4ff] text-[#565e74] font-label-sm text-label-sm px-2 py-0.5 rounded-lg font-semibold uppercase">{task.status === 'in_progress' ? 'In Progress' : task.status}</span>
                       )}
                     </div>
                     
-                    <div className="flex flex-col gap-xs pr-14">
+                    <div className="flex flex-col gap-1 pr-14">
                       <span className="font-label-sm text-label-sm text-[#004ac6] uppercase tracking-widest font-bold">
                         {task.priority} priority
                       </span>
                       <h3 className="font-headline-sm text-headline-sm text-[#0b1c30] font-bold line-clamp-1">{task.title}</h3>
-                      <p className="font-body-sm text-body-sm text-[#434655] line-clamp-2 mt-xs">
+                      <p className="font-body-sm text-body-sm text-[#565e74] line-clamp-2 mt-1">
                         {task.description ? task.description.split('\n\n')[0] : 'No additional guidelines provided.'}
                       </p>
                       
-                      <div className="mt-md flex items-center justify-between border-t border-[#e2e8f0] pt-sm text-[12px] text-[#434655]">
-                        <span className="flex items-center gap-xs font-semibold">
+                      <div className="mt-md flex items-center justify-between border-t border-[#e2e8f0] pt-sm text-[12px] text-[#565e74]">
+                        <span className="flex items-center gap-1.5 font-semibold">
                           <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                           Due {new Date(task.deadline).toLocaleDateString()}
                         </span>

@@ -15,10 +15,15 @@ export function AuthProvider({ children }) {
   const role = user?.role || null;
 
   function login(tokenValue, userData) {
+    // Normalize: backend returns full_name, frontend uses name
+    const normalized = {
+      ...userData,
+      name: userData.name || userData.full_name || 'User',
+    };
     localStorage.setItem('wf_token', tokenValue);
-    localStorage.setItem('wf_user', JSON.stringify(userData));
+    localStorage.setItem('wf_user', JSON.stringify(normalized));
     setToken(tokenValue);
-    setUser(userData);
+    setUser(normalized);
   }
 
   function logout() {

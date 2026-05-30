@@ -1,5 +1,5 @@
 """
-WorkFlow — Autonomous Cognitive Verifier Engine
+Aegis — Autonomous Cognitive Verifier Engine
 ===============================================
 Launches Playwright E2E browser automation to crawl human webpage proofs,
 and runs advanced anti-bluffing verification prompts with local LLMs.

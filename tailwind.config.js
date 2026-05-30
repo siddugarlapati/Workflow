@@ -1,92 +1,9 @@
 /** @type {import('tailwindcss').Config} */
+// NOTE: In Tailwind v4, this file is used only for content scanning.
+// All design tokens (colors, spacing, fonts) are defined in src/index.css via @theme.
 export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  darkMode: "class",
-  theme: {
-    extend: {
-      colors: {
-        "tertiary": "#943700",
-        "on-secondary-container": "#5c647a",
-        "secondary-fixed-dim": "#bec6e0",
-        "on-primary-container": "#eeefff",
-        "tertiary-container": "#bc4800",
-        "on-secondary": "#ffffff",
-        "background": "#f8f9ff",
-        "on-tertiary-container": "#ffede6",
-        "surface-bright": "#f8f9ff",
-        "on-error": "#ffffff",
-        "surface-variant": "#d3e4fe",
-        "error": "#ba1a1a",
-        "on-error-container": "#93000a",
-        "primary-fixed-dim": "#b4c5ff",
-        "surface-container-low": "#eff4ff",
-        "surface": "#f8f9ff",
-        "on-background": "#0b1c30",
-        "outline": "#737686",
-        "on-primary": "#ffffff",
-        "on-tertiary": "#ffffff",
-        "tertiary-fixed-dim": "#ffb596",
-        "surface-container-high": "#dce9ff",
-        "on-primary-fixed": "#00174b",
-        "primary-fixed": "#dbe1ff",
-        "on-primary-fixed-variant": "#003ea8",
-        "inverse-on-surface": "#eaf1ff",
-        "secondary-fixed": "#dae2fd",
-        "error-container": "#ffdad6",
-        "tertiary-fixed": "#ffdbcd",
-        "inverse-primary": "#b4c5ff",
-        "on-tertiary-fixed": "#360f00",
-        "on-secondary-fixed": "#131b2e",
-        "surface-dim": "#cbdbf5",
-        "secondary": "#565e74",
-        "surface-tint": "#0053db",
-        "on-surface-variant": "#434655",
-        "outline-variant": "#c3c6d7",
-        "primary": "#004ac6",
-        "secondary-container": "#dae2fd",
-        "primary-container": "#2563eb",
-        "surface-container-lowest": "#ffffff",
-        "on-tertiary-fixed-variant": "#7d2d00",
-        "surface-container": "#e5eeff",
-        "inverse-surface": "#213145",
-        "surface-container-highest": "#d3e4fe",
-        "on-surface": "#0b1c30",
-        "on-secondary-fixed-variant": "#3f465c"
-      },
-      borderRadius: {
-        "DEFAULT": "0.25rem",
-        "lg": "0.5rem",
-        "xl": "0.75rem",
-        "full": "9999px"
-      },
-      spacing: {
-        "xs": "4px",
-        "gutter": "24px",
-        "md": "24px",
-        "lg": "40px",
-        "margin": "32px",
-        "base": "8px",
-        "sm": "12px",
-        "xl": "64px"
-      },
-      fontFamily: {
-        "label-md": ["Geist", "sans-serif"],
-        "display-lg": ["Geist", "sans-serif"],
-        "headline-lg": ["Geist", "sans-serif"],
-        "label-sm": ["Geist", "sans-serif"],
-        "body-md": ["Inter", "sans-serif"],
-        "body-sm": ["Inter", "sans-serif"],
-        "body-lg": ["Inter", "sans-serif"],
-        "headline-md": ["Geist", "sans-serif"],
-        "headline-sm": ["Geist", "sans-serif"]
-      }
-    },
-  },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/container-queries'),
   ],
 }

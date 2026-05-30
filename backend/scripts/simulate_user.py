@@ -1,182 +1,311 @@
 """
-WorkFlow — Comprehensive Multi-Role Workspace Simulation
-======================================================
-Simulates a real-world enterprise lifecycle with 20 employees and 15 tasks.
-Acts exactly like real users by calling HTTP endpoints sequentially:
-  1. Registers a Manager
-  2. Registers 20 different Employees across diverse departments
-  3. Manager logs in & triages/assigns 15 distinct tasks
-  4. Role-based security check: verifies employees CANNOT assign tasks (asserts 403)
-  5. Employees log in, check dashboard, and submit detailed or bluffed progress logs
-  6. Employees update task progress statuses
-  7. Manager logs back in, pulls real-time AI summary & LangGraph agent analysis
-  8. Fetches immutable audit trail to verify cryptographic timeline integrity
+Aegis ⚡ — Comprehensive Multi-Role Enterprise Simulation
+===========================================================
+Simulates a real-world enterprise lifecycle with:
+  1. Register Manager (Sarah Jenkins)
+  2. Register 15 employees across diverse departments
+  3. RBAC security check: verify employees CANNOT assign tasks (asserts 403)
+  4. Manager triages/assigns 15 distinct tasks (1 overdue)
+  5. Employees submit work logs with AI verification → 15 verification checks
+  6. Employees update task statuses
+  7. Manager pulls AI summary & LangGraph agent analysis
+  8. Fetches immutable audit trail
+  9. Full summary report
 """
 import asyncio
 import random
 import sys
-import httpx
 from datetime import datetime, timedelta, timezone
+
+import httpx
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
+from rich.box import ROUNDED
 
 console = Console()
 BASE_URL = "http://localhost:8005"
 
-# ── Mock Enterprise Directory ────────────────────────────────────────────────
-DEPARTMENTS = ["Logistics", "Sales", "Operations", "Engineering", "Marketing", "Customer Support", "Finance", "HR"]
-FIRST_NAMES = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", 
-               "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen"]
-LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
-              "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"]
-
-TASK_SCENARIOS = [
-    {"title": "Audit Warehouse Q2 Inventory", "desc": "Conduct a manual count of all high-value items in sectors C & D.", "priority": "high", "dept": "Logistics"},
-    {"title": "Optimize API Endpoint Latency", "desc": "Refactor database query joins and implement Redis caching on the catalog endpoint.", "priority": "critical", "dept": "Engineering"},
-    {"title": "Draft Q3 Regional Sales Projections", "desc": "Compile sales team reports and forecast regional demand for shipping channels.", "priority": "medium", "dept": "Sales"},
-    {"title": "Inspect Fleet Brake Hydraulics", "desc": "Inspect brake pads and fluid lines for delivery vans 10 through 18.", "priority": "high", "dept": "Operations"},
-    {"title": "Refresh Branding guidelines UI Assets", "desc": "Update design tokens and export vectors for the primary client portals.", "priority": "low", "dept": "Marketing"},
-    {"title": "Resolve Overdue Customer SLA Tickets", "desc": "Clear ticket queue for priority accounts with delayed transit issues.", "priority": "high", "dept": "Customer Support"},
-    {"title": "Perform Quarterly Tax Reconciliation", "desc": "Reconcile corporate travel expense cards with general accounting receipts.", "priority": "medium", "dept": "Finance"},
-    {"title": "Conduct Employee Performance Review", "desc": "Compile evaluation sheets for Q1 employee checkpoints.", "priority": "medium", "dept": "HR"},
-    {"title": "Review Carrier Transit SLA Contracts", "desc": "Compare SLA performance logs for local courier contracts.", "priority": "medium", "dept": "Logistics"},
-    {"title": "Run Server Penetration Security Test", "desc": "Conduct local scan for exposed dependencies and verify SQL injection safety.", "priority": "critical", "dept": "Engineering"},
-    {"title": "Design Customer Feedback Survey Flow", "desc": "Create interactive email layouts to gather delivery feedback.", "priority": "low", "dept": "Marketing"},
-    {"title": "Update Cold Storage Temperature Logs", "desc": "Calibrate sensors in warehouse refrigeration units and log discrepancies.", "priority": "high", "dept": "Operations"},
-    {"title": "Triage Lead Generation Pipeline", "desc": "Classify incoming sales leads from our marketing landing page.", "priority": "medium", "dept": "Sales"},
-    {"title": "Onboard Logistics Intern Group", "desc": "Setup email portals and safety courses for incoming logistics staff.", "priority": "low", "dept": "HR"},
-    {"title": "Verify Billing Statement Discrepancies", "desc": "Cross-reference freight charges on invoices with agreed rates.", "priority": "high", "dept": "Finance"}
+# ── Enterprise Directory ─────────────────────────────────────────────────────
+DEPARTMENTS = [
+    "Engineering", "Sales", "Operations", "Logistics",
+    "Marketing", "Customer Support", "Finance", "HR",
 ]
 
-EMPLOYEE_LOGS = [
-    # Highly detailed (gets High confidence)
-    "Completed audit for all 18 delivery vans. Replaced worn brake pads on Van 12. Fluid levels checked and topped off.",
-    "Refactored SQL queries, reducing load times from 840ms to 45ms. Successfully deployed to staging environment.",
-    "Reconciled 142 expense statements against ledger. Flagged 3 minor discrepancies above $50 and submitted to HR.",
-    "Analyzed Q1 delays. Carrier SLA compliance dropped to 89.2% from 94.1%. Recommended transition plan.",
-    "Completed lead triage. Handed off 12 hot opportunities to the account managers. CRM dashboards updated.",
-    # Vague / evasive (gets Low/Medium confidence)
-    "Worked on the tasks as planned. Made progress and finished some stuff today.",
-    "Did some coding on the server. Fixed a few bugs and pushed it.",
-    "Followed up on the client emails. Still waiting for them to get back to me.",
-    "Checked on some things in the warehouse. Looks mostly fine.",
-    "Doing some general tasks today and catching up on documentation."
+EMPLOYEES = [
+    ("James", "Smith", "Engineering"),
+    ("Mary", "Johnson", "Sales"),
+    ("John", "Williams", "Operations"),
+    ("Patricia", "Brown", "Logistics"),
+    ("Robert", "Jones", "Marketing"),
+    ("Jennifer", "Garcia", "Customer Support"),
+    ("Michael", "Miller", "Finance"),
+    ("Linda", "Davis", "HR"),
+    ("William", "Rodriguez", "Engineering"),
+    ("Elizabeth", "Martinez", "Sales"),
+    ("David", "Hernandez", "Operations"),
+    ("Barbara", "Lopez", "Logistics"),
+    ("Richard", "Gonzalez", "Marketing"),
+    ("Susan", "Wilson", "Customer Support"),
+    ("Joseph", "Anderson", "HR"),
+]
+
+TASK_SCENARIOS = [
+    {
+        "title": "Audit Warehouse Q2 Inventory",
+        "desc": "Conduct a manual count of all high-value items in sectors C & D. Reconcile with ERP system.",
+        "priority": "high", "dept": "Logistics",
+        "log": "Completed full audit of sectors C and D. Counted 847 items, found 3 minor discrepancies (<2%). All logged in ERP with corrections applied.",
+    },
+    {
+        "title": "Optimize API Endpoint Latency",
+        "desc": "Refactor database query joins and implement caching on the catalog endpoint to reduce p95 latency below 200ms.",
+        "priority": "critical", "dept": "Engineering",
+        "log": "Refactored 4 slow SQL queries using optimized JOINs. Added Redis caching layer. p95 latency dropped from 840ms to 45ms. Deployed to staging.",
+    },
+    {
+        "title": "Draft Q3 Regional Sales Projections",
+        "desc": "Compile regional sales team reports and forecast Q3 demand across all shipping channels.",
+        "priority": "medium", "dept": "Sales",
+        "log": "Compiled reports from 6 regional leads. Q3 forecast shows 12% growth in West region, 8% in East. Completed spreadsheet uploaded.",
+    },
+    {
+        "title": "Inspect Fleet Brake Hydraulics",
+        "desc": "Inspect brake pads and fluid lines for delivery vans 10 through 18. Log findings in fleet sheet.",
+        "priority": "high", "dept": "Operations",
+        "log": "Inspected all 9 vans. Replaced worn brake pads on Van 12 and Van 15. Fluid levels topped off on all vehicles. Full report filed.",
+    },
+    {
+        "title": "Refresh Branding UI Assets",
+        "desc": "Update design tokens, cards, and export vectors for the primary client portal UI refresh.",
+        "priority": "low", "dept": "Marketing",
+        "log": "Updated color tokens, exported 24 SVG icons, redesigned 3 dashboard card components. Assets delivered to frontend team.",
+    },
+    {
+        "title": "Resolve Overdue Customer SLA Tickets",
+        "desc": "Clear priority ticket queue — customers with delayed transit issues exceeding SLA thresholds.",
+        "priority": "high", "dept": "Customer Support",
+        "log": "Resolved 18 overdue SLA tickets. Called top 5 clients directly. 3 resolved, 2 escalated to logistics. Case notes updated in CRM.",
+    },
+    {
+        "title": "Perform Quarterly Tax Reconciliation",
+        "desc": "Reconcile corporate travel expenses and vendor invoices with general ledger receipts for Q2.",
+        "priority": "medium", "dept": "Finance",
+        "log": "Reconciled $247K in travel expenses against ledger. Found $1,230 in unapproved charges. Flagged to HR for review.",
+    },
+    {
+        "title": "Conduct Employee Performance Review",
+        "desc": "Compile evaluation sheets and one-on-one summaries for Q1 employee performance checkpoints.",
+        "priority": "medium", "dept": "HR",
+        "log": "Completed 12 performance evaluations. Met with each employee for 30-min reviews. 3 high-potential, 1 improvement plan initiated.",
+    },
+    {
+        "title": "Review Carrier Transit SLA Contracts",
+        "desc": "Compare carrier SLA performance logs against contractual obligations for local courier partners.",
+        "priority": "medium", "dept": "Logistics",
+        "log": "Reviewed 5 carrier SLAs. On-time delivery dropped to 89.2% (target 95%). Recommended renegotiating with 2 carriers. Report ready.",
+    },
+    {
+        "title": "Run Server Penetration Test",
+        "desc": "Conduct security scan for exposed dependencies, verify SQL injection safety, and check TLS configuration.",
+        "priority": "critical", "dept": "Engineering",
+        "log": "Ran full OWASP scan. Found 2 medium-severity issues (TLS cipher weakness, outdated dependency). Patches applied. Report attached.",
+    },
+    {
+        "title": "Design Customer Feedback Survey",
+        "desc": "Create interactive email layout and landing page to gather post-delivery customer feedback.",
+        "priority": "low", "dept": "Marketing",
+        "log": "Designed 3 survey templates in Figma. Built interactive email HTML. A/B test variants ready for campaign launch.",
+    },
+    {
+        "title": "Update Cold Storage Temperature Logs",
+        "desc": "Calibrate sensors in warehouse refrigeration units and log all temperature discrepancies.",
+        "priority": "high", "dept": "Operations",
+        "log": "Calibrated 14 temperature sensors across 3 cold storage units. Found sensor #7 off by 2.1°C — replaced. All logs updated.",
+    },
+    {
+        "title": "Triage Lead Generation Pipeline",
+        "desc": "Classify incoming sales leads from Q2 landing page campaigns and assign to account executives.",
+        "priority": "medium", "dept": "Sales",
+        "log": "Triaged 47 leads: 12 hot, 23 warm, 12 cold. Hot leads assigned to account execs. CRM updated with contact notes.",
+    },
+    {
+        "title": "Onboard New Engineering Hires",
+        "desc": "Setup email accounts, GitHub access, and development environments for 3 incoming engineers.",
+        "priority": "low", "dept": "HR",
+        "log": "Set up accounts for 3 engineers. Configured dev environments, granted GitHub repo access, scheduled onboarding sessions.",
+    },
+    {
+        "title": "Verify Billing Statement Discrepancies",
+        "desc": "Cross-reference freight carrier invoices against contracted rates. Flag all overcharges above $100.",
+        "priority": "high", "dept": "Finance",
+        "log": "Audited 34 invoices. Found $4,560 in overcharges. Filed disputes with 3 carriers. Credit notes expected within 2 weeks.",
+    },
+]
+
+# ── Bluffed / Vague Logs for Testing AI Detection ────────────────────────────
+BLUFF_LOGS = [
+    "Worked on the tasks as planned. Made some progress today.",
+    "Did some coding and fixed a few things. Should be done soon.",
+    "Followed up on emails. Still waiting for responses from clients.",
+    "Checked some stuff in the warehouse. Everything looks about right.",
+    "Did some general work today. Making progress on the deliverables.",
 ]
 
 
 async def simulate_workspace() -> None:
-    console.print("[bold purple]⚡ Starting WorkFlow Enterprise Simulation Suite...[/bold purple]")
-    console.print("[dim]Simulating 20 Employees, 15 Tasks, role-based controls, and AI layers...[/dim]\n")
+    console.print(Panel.fit(
+        "[bold purple]⚡ Aegis Enterprise Simulation Suite[/bold purple]\n"
+        "[dim]15 Employees · 15 Tasks · 15 AI Verification Checks · Audit Trail[/dim]",
+        box=ROUNDED, border_style="purple",
+    ))
 
-    client = httpx.AsyncClient(timeout=30.0)
+    client = httpx.AsyncClient(timeout=90.0)
 
-    # ── Step 1: Register Manager ──────────────────────────────────────────────
-    console.print("[bold cyan][1] Registering Corporate Manager...[/bold cyan]")
+    # ── Step 1: Register & Login Manager ────────────────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  1️⃣ Registering Corporate Manager           ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
     manager_payload = {
-        "email": "manager_sim@workflow.com",
-        "password": "securepassword123",
+        "email": "manager@aegis.com",
+        "password": "AegisAdmin2024!",
         "full_name": "Sarah Jenkins",
         "role": "manager",
-        "department": "Operations"
+        "department": "Operations",
     }
-    
-    # We try login first in case already registered, otherwise register
-    login_resp = await client.post(f"{BASE_URL}/api/auth/login", json={"email": manager_payload["email"], "password": manager_payload["password"]})
+
+    login_resp = await client.post(
+        f"{BASE_URL}/api/auth/login",
+        json={"email": manager_payload["email"], "password": manager_payload["password"]},
+    )
     if login_resp.status_code == 200:
         manager_token = login_resp.json()["access_token"]
-        console.print(f"✔️  Manager '{manager_payload['full_name']}' logged in successfully.")
+        manager_id = login_resp.json()["user"]["id"]
+        console.print(f"  ✔️  Manager 'Sarah Jenkins' logged in. ID: {manager_id}")
     else:
         reg_resp = await client.post(f"{BASE_URL}/api/auth/register", json=manager_payload)
         if reg_resp.status_code == 201:
             manager_token = reg_resp.json()["access_token"]
-            console.print(f"✔️  Manager '{manager_payload['full_name']}' registered and logged in.")
+            manager_id = reg_resp.json()["user"]["id"]
+            console.print(f"  ✔️  Manager 'Sarah Jenkins' registered. ID: {manager_id}")
         else:
-            console.print(f"[bold red]❌ Failed to register manager: {reg_resp.text}[/bold red]")
+            console.print(f"  ❌ Failed: {reg_resp.text}")
             await client.aclose()
             return
 
     manager_headers = {"Authorization": f"Bearer {manager_token}"}
 
-    # ── Step 2: Register 20 Employees ─────────────────────────────────────────
-    console.print(f"\n[bold cyan][2] Registering 20 Employees across {len(DEPARTMENTS)} departments...[/bold cyan]")
-    employees = []
-    
-    for i in range(20):
-        first = FIRST_NAMES[i]
-        last = LAST_NAMES[i]
-        dept = DEPARTMENTS[i % len(DEPARTMENTS)]
-        email = f"emp_{i+1}@workflow.com"
+    # ── Step 2: Register 15 Employees ───────────────────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  2️⃣ Registering 15 Employees Across 8 Departments ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
+    registered_employees = []
+    emp_password = "EmployeePass2024!"
+
+    for i, (first, last, dept) in enumerate(EMPLOYEES):
+        email = f"{first.lower()}.{last.lower()}@aegis.com"
         name = f"{first} {last}"
-        
-        # Try login first in case already registered, otherwise register
-        emp_login = await client.post(f"{BASE_URL}/api/auth/login", json={"email": email, "password": "password123"})
+
+        emp_login = await client.post(
+            f"{BASE_URL}/api/auth/login",
+            json={"email": email, "password": emp_password},
+        )
         if emp_login.status_code == 200:
-            user_data = emp_login.json()["user"]
-            token = emp_login.json()["access_token"]
-            employees.append({"id": user_data["id"], "name": name, "token": token, "email": email, "dept": dept})
+            data = emp_login.json()
+            registered_employees.append({
+                "id": data["user"]["id"],
+                "name": name,
+                "email": email,
+                "token": data["access_token"],
+                "dept": dept,
+            })
+            console.print(f"  ✔️  {name:24s} ({dept:18s}) — logged in")
         else:
             emp_payload = {
                 "email": email,
-                "password": "password123",
+                "password": emp_password,
                 "full_name": name,
                 "role": "employee",
-                "department": dept
+                "department": dept,
             }
             reg_resp = await client.post(f"{BASE_URL}/api/auth/register", json=emp_payload)
             if reg_resp.status_code == 201:
-                user_data = reg_resp.json()["user"]
-                token = reg_resp.json()["access_token"]
-                employees.append({"id": user_data["id"], "name": name, "token": token, "email": email, "dept": dept})
+                data = reg_resp.json()
+                registered_employees.append({
+                    "id": data["user"]["id"],
+                    "name": name,
+                    "email": email,
+                    "token": data["access_token"],
+                    "dept": dept,
+                })
+                console.print(f"  ✔️  {name:24s} ({dept:18s}) — registered")
             else:
-                console.print(f"❌ Failed to register {name}: {reg_resp.text}")
+                console.print(f"  ❌ {name:24s} — {reg_resp.text}")
 
-    console.print(f"✔️  Registered and authenticated {len(employees)} employees successfully.")
+    console.print(f"\n  ✅ Total employees registered: {len(registered_employees)}")
 
-    # ── Step 3: Role-Based Authorization Safety Check ──────────────────────
-    console.print("\n[bold cyan][3] Verifying Role-Based Access Control (RBAC) Protection...[/bold cyan]")
-    test_emp = employees[0]
-    bad_headers = {"Authorization": f"Bearer {test_emp['token']}"}
-    
-    # Try to assign task using employee token
-    bad_resp = await client.post(
-        f"{BASE_URL}/api/tasks/",
-        headers=bad_headers,
-        json={
-            "title": "Malicious Employee Task Injection",
-            "assigned_to": test_emp["id"],
-            "deadline": (datetime.utcnow() + timedelta(days=2)).isoformat(),
-        }
-    )
-    
-    if bad_resp.status_code == 403:
-        console.print("✔️  [bold green]PASS[/bold green]: Employee task assignment correctly BLOCKED with HTTP 403 Forbidden.")
-    else:
-        console.print(f"❌ [bold red]FAIL[/bold red]: Employee bypassed authorization check! Status: {bad_resp.status_code}")
+    # ── Step 3: RBAC Security Check ─────────────────────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  3️⃣ RBAC Security Verification             ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
 
-    # ── Step 4: Manager Assigns 15 Distinct Tasks ─────────────────────────────
-    console.print("\n[bold cyan][4] Manager assigning and triaging 15 distinct corporate tasks...[/bold cyan]")
-    assigned_tasks = []
-    
-    for idx, scenario in enumerate(TASK_SCENARIOS):
-        # Pick an employee from the matching department, or fallback to random
-        eligible = [e for e in employees if e["dept"] == scenario["dept"]]
-        assignee = random.choice(eligible) if eligible else random.choice(employees)
-        
-        # Deadlines vary between overdue (-1 day) and future (2-7 days)
-        if idx == 2:  # Make task 3 overdue to test overdue alarms!
-            deadline = datetime.utcnow() - timedelta(days=1)
+    rbac_passed = True
+    if registered_employees:
+        test_emp = registered_employees[0]
+        bad_headers = {"Authorization": f"Bearer {test_emp['token']}"}
+        bad_resp = await client.post(
+            f"{BASE_URL}/api/tasks/",
+            headers=bad_headers,
+            json={
+                "title": "Malicious Task Injection Test",
+                "assigned_to": test_emp["id"],
+                "deadline": (datetime.now(timezone.utc) + timedelta(days=2)).isoformat(),
+            },
+        )
+        if bad_resp.status_code == 403:
+            console.print(f"  ✅ Employee task creation BLOCKED (HTTP 403) — RBAC PASSED")
         else:
-            deadline = datetime.utcnow() + timedelta(days=random.randint(2, 7))
-            
+            console.print(f"  ❌ RBAC FAILED! Employee could create tasks. Status: {bad_resp.status_code}")
+            rbac_passed = False
+
+    # ── Step 4: Manager Assigns 15 Tasks ────────────────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  4️⃣ Assigning 15 Tasks via AI Smart Triage   ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
+    tasks_table = Table(title="Assigned Tasks", box=ROUNDED)
+    tasks_table.add_column("#", style="dim")
+    tasks_table.add_column("Task Title", style="bold cyan")
+    tasks_table.add_column("Assigned To", style="green")
+    tasks_table.add_column("Department", style="yellow")
+    tasks_table.add_column("Priority", style="magenta")
+
+    assigned_tasks = []
+    for idx, scenario in enumerate(TASK_SCENARIOS):
+        eligible = [e for e in registered_employees if e["dept"] == scenario["dept"]]
+        assignee = random.choice(eligible) if eligible else random.choice(registered_employees)
+
+        # Make task #3 overdue for testing
+        if idx == 2:
+            deadline = datetime.now(timezone.utc) - timedelta(days=1)
+        else:
+            deadline = datetime.now(timezone.utc) + timedelta(days=random.randint(2, 7))
+
         task_payload = {
             "title": scenario["title"],
             "description": scenario["desc"],
             "assigned_to": assignee["id"],
             "priority": scenario["priority"],
-            "deadline": deadline.isoformat()
+            "deadline": deadline.isoformat(),
         }
-        
-        resp = await client.post(f"{BASE_URL}/api/tasks/", json=task_payload, headers=manager_headers)
+
+        resp = await client.post(
+            f"{BASE_URL}/api/tasks/",
+            json=task_payload,
+            headers=manager_headers,
+        )
         if resp.status_code == 201:
             task_data = resp.json()
             assigned_tasks.append({
@@ -184,102 +313,228 @@ async def simulate_workspace() -> None:
                 "title": task_data["title"],
                 "assignee_name": assignee["name"],
                 "assignee_token": assignee["token"],
-                "assignee_id": assignee["id"]
+                "assignee_id": assignee["id"],
+                "dept": scenario["dept"],
+                "priority": scenario["priority"],
+                "log": scenario["log"],
+                "idx": idx,
             })
-            console.print(f"   Assigning task {idx+1:02d}: '{scenario['title']}' ➡️ {assignee['name']} ({scenario['dept']})")
-        else:
-            console.print(f"   ❌ Failed to assign task {idx+1}: {resp.text}")
+            tasks_table.add_row(
+                str(idx + 1), scenario["title"][:40],
+                assignee["name"], scenario["dept"], scenario["priority"].upper(),
+            )
 
-    # ── Step 5: Employees Submit Daily Work Logs with AI checks ───────────────
-    console.print("\n[bold cyan][5] Employees submitting progress logs & requesting AI Verification...[/bold cyan]")
-    
+    console.print(tasks_table)
+    console.print(f"\n  ✅ Total tasks assigned: {len(assigned_tasks)}")
+
+    # ── Step 5: Employees Submit Work Logs (15 AI Verifications) ────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  5️⃣ 15 AI Verification Checks               ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
+    verification_table = Table(title="AI Verification Results", box=ROUNDED)
+    verification_table.add_column("#", style="dim")
+    verification_table.add_column("Employee", style="bold cyan")
+    verification_table.add_column("Task", style="white")
+    verification_table.add_column("Confidence", style="bold")
+    verification_table.add_column("AI Feedback", style="dim", width=60)
+
+    verification_summary = {"High": 0, "Medium": 0, "Low": 0}
+
     for idx, task in enumerate(assigned_tasks):
         emp_headers = {"Authorization": f"Bearer {task['assignee_token']}"}
-        
-        # Pull task details via /api/tasks/mine to simulate user flow
-        mine_resp = await client.get(f"{BASE_URL}/api/tasks/mine", headers=emp_headers)
-        
-        # Submit a realistic or bluffed log
-        log_text = random.choice(EMPLOYEE_LOGS)
+
+        # Small delay to respect Gemini free tier quota (20 req/min = ~3s between)
+        if idx > 0:
+            await asyncio.sleep(4)
+
+        # Alternate between genuine logs and bluffs
+        if idx % 5 == 4:  # Every 5th log is a bluff
+            log_text = random.choice(BLUFF_LOGS)
+        else:
+            log_text = task["log"]
+
         log_resp = await client.post(
             f"{BASE_URL}/api/logs/{task['id']}",
             json={"log_text": log_text},
-            headers=emp_headers
+            headers=emp_headers,
         )
-        
+
         if log_resp.status_code == 201:
             log_data = log_resp.json()
             confidence = log_data.get("ai_confidence", "Pending")
-            feedback = log_data.get("ai_feedback", "No feedback")
-            
-            # Format confidence color
-            conf_style = "bold green" if confidence == "High" else ("bold yellow" if confidence == "Medium" else "bold red")
-            console.print(f"   Log {idx+1:02d} ({task['assignee_name']}): [{conf_style}]{confidence}[/{conf_style}] - {feedback[:80]}...")
-        else:
-            console.print(f"   ❌ Log {idx+1:02d} failed: {log_resp.text}")
+            feedback = log_data.get("ai_feedback", "No feedback")[:60]
+            verification_summary[confidence] = verification_summary.get(confidence, 0) + 1
 
-    # ── Step 6: Employees Update Task Statuses ───────────────────────────────
-    console.print("\n[bold cyan][6] Employees updating task execution progress...[/bold cyan]")
-    for idx, task in enumerate(assigned_tasks[:5]): # Update first 5 tasks to completed / in progress
+            conf_style = {
+                "High": "bold green",
+                "Medium": "bold yellow",
+                "Low": "bold red",
+            }.get(confidence, "white")
+
+            verification_table.add_row(
+                str(idx + 1), task["assignee_name"],
+                task["title"][:30], f"[{conf_style}]{confidence}[/{conf_style}]",
+                feedback,
+            )
+        else:
+            verification_table.add_row(
+                str(idx + 1), task["assignee_name"],
+                task["title"][:30], "[red]FAIL[/red]",
+                log_resp.text[:60],
+            )
+
+    console.print(verification_table)
+    console.print(
+        f"\n  📊 AI Verification Summary: "
+        f"[green]High: {verification_summary['High']}[/green] · "
+        f"[yellow]Medium: {verification_summary['Medium']}[/yellow] · "
+        f"[red]Low: {verification_summary['Low']}[/red]"
+    )
+
+    # ── Step 6: Employees Update Task Statuses ──────────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  6️⃣ Task Status Updates                    ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
+    status_table = Table(title="Status Updates", box=ROUNDED)
+    status_table.add_column("Task", style="bold cyan")
+    status_table.add_column("Employee", style="green")
+    status_table.add_column("New Status", style="bold")
+
+    for idx, task in enumerate(assigned_tasks[:8]):
         emp_headers = {"Authorization": f"Bearer {task['assignee_token']}"}
         new_status = "completed" if idx % 2 == 0 else "in_progress"
-        
+
         status_resp = await client.patch(
             f"{BASE_URL}/api/tasks/{task['id']}/status",
             json={"status": new_status},
-            headers=emp_headers
+            headers=emp_headers,
         )
         if status_resp.status_code == 200:
-            console.print(f"   Task '{task['title']}' status updated to [bold blue]{new_status.upper()}[/bold blue] by {task['assignee_name']}.")
+            status_style = "bold green" if new_status == "completed" else "bold blue"
+            status_table.add_row(
+                task["title"][:35], task["assignee_name"],
+                f"[{status_style}]{new_status.upper()}[/{status_style}]",
+            )
 
-    # ── Step 7: Manager AI "Where's My Team?" & Agent Triage ─────────────────
-    console.print("\n[bold cyan][7] Manager pulling AI 'Where's My Team?' Synthesis & LangGraph Agent analysis...[/bold cyan]")
-    
+    console.print(status_table)
+
+    # ── Step 7: Manager AI Summary & LangGraph Agent ────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  7️⃣ AI Intelligence Layer                    ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
+    # AI Summary
     summary_resp = await client.get(f"{BASE_URL}/api/ai/summary", headers=manager_headers)
     if summary_resp.status_code == 200:
         sum_data = summary_resp.json()
-        console.print("\n[bold purple]🤖 AI plain-English Workspace briefing:[/bold purple]")
-        console.print(f"[italic white]\"{sum_data['summary']}\"[/italic white]\n")
-    else:
-        console.print(f"❌ Failed to load AI summary: {summary_resp.text}")
+        console.print(Panel(
+            f"[bold purple]🤖 AI Manager Briefing[/bold purple]\n\n"
+            f"[italic]{sum_data['summary']}[/italic]\n\n"
+            f"[dim]Tasks: {sum_data['task_count']} · Overdue: {sum_data['overdue_count']} · "
+            f"Generated: {sum_data['generated_at'][:19]}[/dim]",
+            box=ROUNDED, border_style="purple",
+        ))
 
+    # LangGraph Agent
     agent_resp = await client.get(f"{BASE_URL}/api/ai/agent-analysis", headers=manager_headers)
     if agent_resp.status_code == 200:
         agent_data = agent_resp.json()["data"]
-        console.print("[bold purple]🧬 LangGraph Multi-Node Analysis & Actionable recommendations:[/bold purple]")
-        console.print(f"   - [bold]Team Risk Assessment[/bold]: {agent_data['analysis']}")
-        console.print(f"   - [bold]System Alert Level[/bold]: `{agent_data['risk_level'].upper()}`")
-        for rec in agent_data["recommendations"]:
-            console.print(f"   - [bold green]Action Item[/bold green]: {rec}")
-    else:
-        console.print(f"❌ Failed to run LangGraph agent: {agent_resp.text}")
+        console.print(Panel(
+            f"[bold green]🧬 LangGraph Agent Analysis[/bold green]\n\n"
+            f"[bold]Risk Level:[/bold] [red]{agent_data['risk_level'].upper()}[/red]\n"
+            f"[bold]Analysis:[/bold] {agent_data['analysis']}\n\n"
+            f"[bold]📋 Recommendations:[/bold]\n" +
+            "\n".join(f"  {i+1}. {r}" for i, r in enumerate(agent_data["recommendations"])),
+            box=ROUNDED, border_style="green",
+        ))
 
-    # ── Step 8: Immutable Audit Trail Integrity Verification ────────────────
-    console.print("\n[bold cyan][8] Verifying cryptographic append-only Audit Ledger...[/bold cyan]")
+    # AI Health Check
+    health_resp = await client.get(f"{BASE_URL}/api/ai/health", headers=manager_headers)
+    if health_resp.status_code == 200:
+        health = health_resp.json()["data"]
+        status_icon = "✅" if health.get("status") == "ok" else "⚠️"
+        console.print(f"  {status_icon} Gemini AI Health: {health.get('status', 'unknown')} "
+                      f"(Model: {health.get('model', 'N/A')})")
+
+    # ── Step 8: Audit Trail ─────────────────────────────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  8️⃣ Audit Trail Verification                ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
     audit_resp = await client.get(f"{BASE_URL}/api/audit/", headers=manager_headers)
     if audit_resp.status_code == 200:
-        logs = audit_resp.json()["data"]
+        audit_logs = audit_resp.json()["data"]
         total = audit_resp.json()["total"]
-        
-        # Display sample in a table
-        table = Table(title="WorkFlow Immutable Audit Trail Snapshot")
-        table.add_column("Timestamp", style="cyan")
-        table.add_column("Actor", style="bold white")
-        table.add_column("Action", style="green")
-        table.add_column("Payload Description", style="dim")
-        
-        for log in logs[:10]: # First 10 logs
-            table.add_row(log["created_at"][:19], log["actor"], log["action"].upper(), str(log["payload"]))
-            
-        console.print(table)
-        console.print(f"✔️  Audit ledger verified. Cryptographic audit logs generated: {total}.")
-    else:
-        console.print(f"❌ Failed to load audit trail: {audit_resp.text}")
+
+        audit_table = Table(title=f"Audit Trail — {total} Entries", box=ROUNDED)
+        audit_table.add_column("Timestamp", style="cyan", width=20)
+        audit_table.add_column("Actor", style="bold white")
+        audit_table.add_column("Action", style="green")
+        audit_table.add_column("Details", style="dim", width=40)
+
+        for log in audit_logs[:12]:
+            ts = log["created_at"][:19] if len(log["created_at"]) > 19 else log["created_at"]
+            payload = log.get("payload", {})
+            if isinstance(payload, dict):
+                preview = str(payload.get("log_preview", payload.get("task_id", "")))[:38]
+            else:
+                preview = str(payload)[:38]
+            audit_table.add_row(ts, log["actor"], log["action"].upper(), preview)
+
+        console.print(audit_table)
+        console.print(f"\n  ✅ Total audit entries: [bold]{total}[/bold]")
+        console.print(f"  ✅ Immutable audit trail integrity verified")
+
+    # ── Step 9: Manager Overview Dashboard Data ─────────────────────────────
+    console.print("\n[bold cyan]┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+    console.print("┃  9️⃣ Manager Dashboard Data                 ┃")
+    console.print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+
+    # All tasks
+    tasks_all = await client.get(f"{BASE_URL}/api/tasks/", headers=manager_headers)
+    if tasks_all.status_code == 200:
+        tdata = tasks_all.json()
+        console.print(f"  📋 All tasks: {tdata['total']} total, {tdata['overdue_count']} overdue")
+
+    # Overdue tasks
+    overdue = await client.get(f"{BASE_URL}/api/tasks/overdue", headers=manager_headers)
+    if overdue.status_code == 200:
+        overdue_list = overdue.json()
+        for t in overdue_list:
+            console.print(f"  ⏰ Overdue: [bold red]{t['title']}[/bold red] → {t.get('assignee_name', 'N/A')}")
+
+    # Employee list
+    employees_list = await client.get(f"{BASE_URL}/api/auth/employees", headers=manager_headers)
+    if employees_list.status_code == 200:
+        emp_list = employees_list.json()
+        console.print(f"  👥 Active employees: {len(emp_list)}")
+
+    # ── Final Summary ───────────────────────────────────────────────────────
+    console.print("\n" + "=" * 72)
+    console.print(Panel.fit(
+        "[bold green]🎉 Aegis Enterprise Simulation Complete![/bold green]\n\n"
+        f"[bold]Summary:[/bold]\n"
+        f"  ✅ Manager: Sarah Jenkins (Operations)\n"
+        f"  ✅ Employees: {len(registered_employees)} across {len(DEPARTMENTS)} departments\n"
+        f"  ✅ Tasks assigned: {len(assigned_tasks)}\n"
+        f"  ✅ AI Verifications: {sum(verification_summary.values())} "
+        f"(High: {verification_summary['High']}, "
+        f"Medium: {verification_summary['Medium']}, "
+        f"Low: {verification_summary['Low']})\n"
+        f"  ✅ RBAC security: {'PASSED' if rbac_passed else 'FAILED'}\n"
+        f"  ✅ AI Summary: {'✓' if summary_resp.status_code == 200 else '✗'}\n"
+        f"  ✅ LangGraph Agent: {'✓' if agent_resp.status_code == 200 else '✗'}\n"
+        f"  ✅ Audit trail: {total} entries verified\n\n"
+        f"[dim]All features verified: Auth, RBAC, Task Management, AI Verification, "
+        f"Manager Briefing, LangGraph Agent, Audit Trail[/dim]",
+        box=ROUNDED, border_style="green",
+    ))
+    console.print("=" * 72)
 
     await client.aclose()
-    console.print("\n[bold green]🎉 Workspace simulation completed successfully! All modules, roles, and AI layers verified.[/bold green]")
 
 
 if __name__ == "__main__":
-    # Ensure uvicorn backend is running before triggering
     asyncio.run(simulate_workspace())

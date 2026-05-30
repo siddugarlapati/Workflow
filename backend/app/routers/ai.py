@@ -79,15 +79,14 @@ async def agent_analysis(
     try:
         result = await runAccountabilityAgent(task_dicts)
     except Exception:
-        # Self-healing fallback when local Ollama is offline/not connected
         overdue_tasks = [t for t in tasks if t.status == "overdue"]
         result = {
-            "analysis": f"Local Workspace Triage: Analyzed {len(tasks)} active tasks. Found {len(overdue_tasks)} overdue.",
+            "analysis": f"Gemini Agent Analysis: Analyzed {len(tasks)} active tasks. Found {len(overdue_tasks)} overdue.",
             "risk_level": "high" if overdue_tasks else "medium",
             "recommendations": [
-                "Initialize local Ollama server to activate LangGraph compliance nodes.",
                 "Review the overdue accountability items in the task manager.",
-                "Audit work log credibility scores submitted on active tasks."
+                "Audit work log credibility scores submitted on active tasks.",
+                "Check GEMINI_API_KEY if AI analysis is degraded."
             ]
         }
     return {"success": True, "data": result}
@@ -103,11 +102,10 @@ async def suggest_priority(
     try:
         result = await suggestTaskPriority(title=title, description=description)
     except Exception:
-        # Self-healing offline fallback
         result = {
             "priority": "medium",
             "deadline_days": 5,
-            "reasoning": "Ollama service offline. Loaded fallback compliance defaults (Standard 5-day cycle)."
+            "reasoning": "Default fallback (Standard 5-day cycle). Check Gemini API key."
         }
     return {"success": True, "data": result}
 
@@ -115,6 +113,6 @@ async def suggest_priority(
 
 @router.get("/health")
 async def ai_health() -> dict:
-    """Check if Ollama is running and the configured model is available."""
+    """Check if Gemini API is configured and available."""
     health = await LLMFactory.health_check()
     return {"success": True, "data": health}

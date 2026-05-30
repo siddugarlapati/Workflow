@@ -1,117 +1,151 @@
 """
-WorkFlow — LLM Factory
-Provides a pluggable LLM abstraction so the AI service can swap
-providers without changing business logic.
-Supports: Google Gemini (Primary when API key is present) & Ollama (Fallback)
+Aegis — LLM Factory (Gemini + Local Fallback)
+===============================================
+Primary: Google Gemini 2.5 Flash
+Fallback: Ollama local model (llama3.2:3b)
+
+Uses LangChain's `.with_fallbacks()` to automatically retry with Ollama
+when the Gemini API is unavailable, quota-exhausted (429), or misconfigured.
 """
+
+from __future__ import annotations
+
 import os
+import urllib.request
+
 import structlog
-from langchain_ollama import ChatOllama
+from langchain_core.language_models import BaseLanguageModel
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import ChatOllama
 
 from app.config import settings
 
 logger = structlog.get_logger()
 
+GEMINI_MODEL = "gemini-2.5-flash"
+LOCAL_MODEL = "llama3.2:3b"  # local fallback — change as needed
+LOCAL_BASE_URL = "http://localhost:11434"
+
+
+def _build_gemini(
+    api_key: str,
+    temperature: float = 0.1,
+    json_mode: bool = False,
+) -> ChatGoogleGenerativeAI:
+    """Factory helper: instantiate Gemini 2.5 Flash."""
+    kwargs: dict = {
+        "model": GEMINI_MODEL,
+        "google_api_key": api_key,
+        "temperature": temperature,
+        "max_output_tokens": 4096,
+    }
+    if json_mode:
+        kwargs["model_kwargs"] = {"response_mime_type": "application/json"}
+    return ChatGoogleGenerativeAI(**kwargs)
+
+
+def _build_fallback(
+    temperature: float = 0.1,
+    json_mode: bool = False,
+) -> ChatOllama:
+    """Factory helper: instantiate local Ollama fallback."""
+    kwargs: dict = {
+        "model": LOCAL_MODEL,
+        "base_url": LOCAL_BASE_URL,
+        "temperature": temperature,
+        "num_predict": 4096,
+    }
+    if json_mode:
+        kwargs["format"] = "json"
+    return ChatOllama(**kwargs)
+
 
 class LLMFactory:
     """
-    Returns a configured LangChain chat model.
-    Funnels model requests to Google Gemini 1.5 Flash if GEMINI_API_KEY is defined,
-    falling back gracefully to local Ollama if missing/mocked.
+    Provides chat models with **automatic fallback** via LangChain's
+    `.with_fallbacks()`. Tries Google Gemini 2.5 Flash first; if the
+    actual API call fails (quota, network, auth), silently retries
+    with a local Ollama model (llama3.2:3b).
+
+    All methods are idempotent and safe to call without a GEMINI_API_KEY.
     """
 
-    _chat_model = None
+    # ── Private helpers ────────────────────────────────────────────────────────
 
     @classmethod
     def _get_api_key(cls) -> str | None:
-        key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
+        """Returns the Gemini API key or None if not configured."""
+        key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY", "")
         if not key or key.lower() in ("placeholder", "none", "mock_key") or not key.strip():
             return None
         return key.strip()
 
-    @classmethod
-    def get_chat_llm(cls, temperature: float = 0.1):
-        """
-        Returns a configured chat model.
-        Uses ChatGoogleGenerativeAI if a Gemini API key is configured,
-        otherwise falls back to ChatOllama.
-        """
-        api_key = cls._get_api_key()
-        if api_key:
-            logger.info("llm.initializing", provider="gemini", model="gemini-2.5-flash")
-            return ChatGoogleGenerativeAI(
-                model="gemini-2.5-flash",
-                google_api_key=api_key,
-                temperature=temperature,
-                max_output_tokens=4096,
-            )
-        else:
-            logger.info(
-                "llm.initializing",
-                provider="ollama",
-                model=settings.ollama_model,
-                base_url=settings.ollama_base_url,
-            )
-            return ChatOllama(
-                model=settings.ollama_model,
-                base_url=settings.ollama_base_url,
-                temperature=temperature,
-                num_predict=600,
-                format="",
-            )
+    # ── Public factory methods ─────────────────────────────────────────────────
 
     @classmethod
-    def get_json_llm(cls):
+    def get_chat_llm(cls, temperature: float = 0.1) -> BaseLanguageModel:
         """
-        Returns a chat model configured to output JSON.
-        Uses ChatGoogleGenerativeAI with response_mime_type="application/json" if a Gemini API key is configured,
-        otherwise falls back to ChatOllama with format="json".
+        Returns a chat model. Uses Gemini primary with Ollama fallback.
+        The `.with_fallbacks()` wrapper automatically retries on failure.
         """
         api_key = cls._get_api_key()
+        fallback = _build_fallback(temperature=temperature)
+
         if api_key:
-            logger.info("llm.initializing_json", provider="gemini", model="gemini-2.5-flash")
-            return ChatGoogleGenerativeAI(
-                model="gemini-2.5-flash",
-                google_api_key=api_key,
-                temperature=0.0,
-                max_output_tokens=4096,
-                model_kwargs={"response_mime_type": "application/json"}
-            )
-        else:
-            return ChatOllama(
-                model=settings.ollama_model,
-                base_url=settings.ollama_base_url,
-                temperature=0.0,
-                num_predict=300,
-                format="json",
-            )
+            logger.info("llm.initializing", provider="gemini", model=GEMINI_MODEL)
+            primary = _build_gemini(api_key, temperature=temperature)
+            return primary.with_fallbacks([fallback])
+
+        logger.info("llm.no_gemini_key", fallback="ollama")
+        return fallback
+
+    @classmethod
+    def get_json_llm(cls) -> BaseLanguageModel:
+        """
+        Returns a JSON-capable chat model. Uses Gemini primary with Ollama fallback.
+        The `.with_fallbacks()` wrapper automatically retries on failure.
+        """
+        api_key = cls._get_api_key()
+        fallback = _build_fallback(temperature=0.0, json_mode=True)
+
+        if api_key:
+            logger.info("llm.initializing_json", provider="gemini", model=GEMINI_MODEL)
+            primary = _build_gemini(api_key, temperature=0.0, json_mode=True)
+            return primary.with_fallbacks([fallback])
+
+        logger.info("llm.no_gemini_key", fallback="ollama")
+        return fallback
 
     @classmethod
     async def health_check(cls) -> dict:
-        """Check the status of configured LLM providers."""
+        """Returns the LLM provider status."""
         api_key = cls._get_api_key()
-        if api_key:
-            return {
-                "status": "ok",
-                "provider": "gemini",
-                "configured_model": "gemini-2.5-flash",
-            }
-        
-        # Local Ollama fallback health check
-        import httpx
+        gemini_status = "ok" if api_key else "unconfigured"
+        active_provider = "gemini" if api_key else "ollama"
+
+        # Quick local model health ping (stdlib only — no hidden deps)
+        ollama_ok = False
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                resp = await client.get(f"{settings.ollama_base_url}/api/tags")
-                models = resp.json().get("models", [])
-                available = [m["name"] for m in models]
-                model_ready = any(
-                    settings.ollama_model in m for m in available
-                )
-                return {
-                    "status": "ok" if model_ready else "model_not_found",
-                    "available_models": available,
-                    "configured_model": settings.ollama_model,
-                }
-        except Exception as e:
-            return {"status": "unreachable", "error": str(e)}
+            req = urllib.request.Request(
+                f"{LOCAL_BASE_URL}/api/tags",
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                ollama_ok = resp.status == 200
+        except Exception:
+            pass
+
+        return {
+            "status": "ok" if (api_key or ollama_ok) else "degraded",
+            "provider": active_provider,
+            "gemini": {
+                "model": GEMINI_MODEL,
+                "configured": bool(api_key),
+                "status": gemini_status,
+            },
+            "ollama": {
+                "model": LOCAL_MODEL,
+                "base_url": LOCAL_BASE_URL,
+                "reachable": ollama_ok,
+            },
+        }

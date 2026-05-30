@@ -3,36 +3,107 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WorkFlow AI Accountability Platform</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
-    
+
+    <!-- SEO -->
+    <title>WorkFlow — AI-Powered Accountability Platform</title>
+    <meta name="description" content="WorkFlow is an enterprise AI-powered accountability platform that autonomously verifies employee task submissions using Gemini AI — eliminating bluffing and ensuring real productivity." />
+    <meta name="keywords" content="AI accountability, task management, employee verification, workplace AI, productivity platform" />
+    <meta name="author" content="WorkFlow Inc." />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="WorkFlow — AI-Powered Accountability Platform" />
+    <meta property="og:description" content="AI-powered task accountability that actually works. Real-time verification powered by Google Gemini." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/logo.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="WorkFlow — AI Accountability Platform" />
+    <meta name="twitter:description" content="Real-time AI task verification. Eliminate bluffing. Drive genuine productivity." />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Material Symbols Outlined (variable font) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9ff;
-        }
-        .bento-card {
-            background-color: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 24px;
-            transition: all 0.2s ease;
-        }
-        .bento-card:hover {
-            box-shadow: 0px 4px 12px rgba(37, 99, 235, 0.05);
-            border-color: #2563eb;
-        }
+      /* Critical inline styles to prevent FOUC */
+      *, *::before, *::after { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: #f8f9ff;
+        color: #0b1c30;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      #root { min-height: 100vh; }
+
+      .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+        user-select: none;
+      }
+
+      /* Initial loading skeleton */
+      .app-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .app-loading-logo {
+        width: 48px;
+        height: 48px;
+        background: #004ac6;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse-logo 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse-logo {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(0.95); }
+      }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading state shown until React mounts -->
+      <div class="app-loading">
+        <div class="app-loading-logo">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 3 L27 7 L27 17 C27 23 22 28 16 29 C10 28 5 23 5 17 L5 7 Z" fill="rgba(255,255,255,0.2)"/>
+            <path d="M11 16 L14.5 19.5 L21 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

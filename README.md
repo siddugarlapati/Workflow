@@ -1,173 +1,234 @@
-# WorkFlow ⚡ — AI-Powered Enterprise Workforce Accountability Platform
+# Aegis ⚡ — AI-Powered Enterprise Workforce Accountability Platform
 
-**WorkFlow** is a production-grade, full-stack compliance and task coordination suite that replaces scattered spreadsheets, chat threads, and verbal instruction with a single, verifiable source of truth. 
-
-Featuring a highly concurrent **FastAPI async backend**, a **modern React + Vite web dashboard**, and a **Capacitor native mobile shell** for Android and iOS, WorkFlow enforces accountability through cryptographic timeline logging and real-time local LLM credibility audits.
+**Aegis** is a production-grade, full-stack compliance and task coordination suite that replaces scattered spreadsheets, chat threads, and verbal instructions with a single, verifiable source of truth. It enforces accountability through AI-driven credibility verification, an immutable audit trail, and real-time team intelligence.
 
 ---
 
-## 🏗️ System Architecture & Telemetry Flow
+## 🚀 Quick Start
 
-The application coordinates services across four decoupled layers:
+### Prerequisites
 
-```mermaid
-graph TD
-    %% Frontend Layers
-    subgraph Client Environments [Client Shells]
-        A1[React + Vite Web App]
-        A2[Capacitor Android App]
-        A3[Capacitor iOS App]
-    end
+| Dependency | Version | Purpose |
+|-----------|---------|---------|
+| **Python** | 3.13+ | Backend runtime |
+| **Node.js** | 20+ | Frontend runtime |
+| **Ollama** | Latest | Local AI fallback |
+| **Gemini API Key** | — | Primary AI engine (optional) |
 
-    %% Gateway Layer
-    subgraph API Gateway [FastAPI Asynchronous Gateway]
-        B1[JWT Auth Middleware]
-        B2[Task Service Controller]
-        B3[Audit Ledger Repository]
-        B4[AI Verification Router]
-    end
+### 1. Start the Backend
 
-    %% Database Engine
-    subgraph Storage Core [Database & Indexing Core]
-        C1[SQLite WAL Concurrent Engine]
-        C2[Immutable Audit Logs Table]
-        C3[LlamaIndex SimpleVectorStore]
-    end
-
-    %% AI Core
-    subgraph Local AI Engine [Ollama Local Inference Gateway]
-        D1[LangChain Verification Pipeline]
-        D2[LangGraph Multi-Step Triage Graph]
-    end
-
-    %% Connections
-    A1 & A2 & A3 -->|JWT Bearer / HTTP REST| B1
-    B1 --> B2 & B3 & B4
-    B2 & B3 -->|WAL Active Read/Write| C1
-    B2 -->|Asynchronous Event Lifespan| C2
-    B4 -->|Ollama Stream client| D1 & D2
-    B4 -.->|In-Memory Indexing fallback| C3
-```
-
----
-
-## 🛡️ Key Technical Innovations
-
-1. **High-Concurrency SQLite WAL Listener:** By mapping database transactions through custom SQLAlchemy event listeners, the connection executes write pragmas (`journal_mode=WAL` and `synchronous=NORMAL`) dynamically on start. This unlocks multi-reader concurrency with asynchronous writes, resolving SQLite's single-writer locking constraints.
-2. **Lifespan Background Overdue Daemon:** An asynchronous cron worker automatically spawns on backend boot, periodically auditing active tasks and transitioning past-deadline deliverables to the `OVERDUE` state without passive route dependencies.
-3. **Self-Healing Local AI / RAG Fallback:** If local Ollama inference is offline, LlamaIndex automatically switches to an in-memory `SimpleVectorStore`, and routes seamlessly yield compliant fallback parameters, preventing HTTP 500 errors.
-4. **Capacitor Native Mobile Shell:** Uses cross-platform bridges to synchronize Vite React bundles into ready-to-run Android Studio Gradle directories and iOS Apple Xcode projects.
-
----
-
-## 🧬 Core Operational Workflows
-
-### 1. Task Creation & AI Triage Workflow
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Manager asSarah Jenkins
-    participant Backend as FastAPI Gateway
-    participant AI as Local Ollama LLM
-
-    Manager->>Backend: Input task title & description
-    Manager->>Backend: Click "Request AI Smart Triage"
-    activate Backend
-    Backend->>AI: Send prompt payload
-    alt Ollama Online
-        AI-->>Backend: Return JSON {priority, deadline_days, reasoning}
-    else Ollama Offline
-        Backend-->>Backend: Load standard fallback compliance default
-    end
-    Backend-->>Manager: Display suggested priority & deadline details
-    deactivate Backend
-    Manager->>Backend: Click "Confirm & Assign Task"
-    Backend->>Backend: Write to local SQLite database
-    Backend->>Backend: Write Immutable Ledger Audit entry
-    Backend-->>Manager: Task Successfully Assigned
-```
-
-### 2. Work Log Submission & Asynchronous AI Verification
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Employee as Bob (Logistics)
-    participant Backend as FastAPI Gateway
-    participant DB as SQLite WAL Engine
-    participant AI as Local Ollama LLM
-    participant RAG as LlamaIndex RAG
-
-    Employee->>Backend: Submit daily work log text
-    activate Backend
-    Backend->>DB: Write WorkLog record (Status: PENDING)
-    Backend->>DB: Log Action in Immutable Audit Trail
-    Backend-->>Employee: Return HTTP 201 (Queued successfully)
-    deactivate Backend
-
-    Note over Backend, RAG: Background task spawned asynchronously
-    activate Backend
-    Backend->>AI: Evaluate statement vs task parameters
-    AI-->>Backend: Return credibility rating (High / Medium / Low)
-    Backend->>DB: Update WorkLog record with confidence & feedback
-    Backend->>RAG: Index log text semantically in local vector store
-    Backend->>DB: Log AI Verification outcome in Audit Trail
-    deactivate Backend
-```
-
----
-
-## 🚀 Setup & Execution Guide
-
-### 1. Configure the Asynchronous Backend
-Initialize the virtual environment, sync packages, and start the gateway:
 ```bash
 cd backend
 uv sync
-
-# Configure environment settings
-cp .env.example .env
-
-# Run the backend server (on conflict-free port 8005)
 uv run uvicorn app.main:app --port 8005 --reload
 ```
 
-### 2. Configure the React + Capacitor Frontend
-Sync Vite assets and build cross-platform native iOS and Android folders:
+### 2. Start the Frontend
+
 ```bash
-# Install packages
 npm install
-
-# Compile Vite React app and sync assets to Android/iOS folders
-npm run mobile:sync
+npm run dev
 ```
 
-### 3. Open Native iOS and Android Projects
-Launch your platform-specific native IDEs instantly:
-```bash
-# Launch Xcode for Apple iOS compilation
-npx cap open ios
+### 3. Open the App
 
-# Launch Android Studio for Google Android compilation
-npx cap open android
-```
+| Service | URL |
+|---------|-----|
+| **Web App** | [http://localhost:5173](http://localhost:5173) |
+| **API Docs** | [http://localhost:8005/docs](http://localhost:8005/docs) (Swagger) |
+| **Ollama** | [http://localhost:11434](http://localhost:11434) |
 
 ---
 
-## 📊 Automated Multi-Role Simulation Suite
-WorkFlow includes an advanced **user simulation script** that acts like a corporate manager and employee roster calling HTTP endpoints sequentially. 
+## 👤 Demo Credentials
 
-To run the simulation and verify every single route, role permission, and ledger log:
+**Manager Account (full access):**
+| Field | Value |
+|-------|-------|
+| Email | `manager@aegis.com` |
+| Password | `AegisAdmin2024!` |
+
+**Employee Account (limited access):**
+| Field | Value |
+|-------|-------|
+| Email | `james.smith@aegis.com` |
+| Password | `EmployeePass2024!` |
+
+> Quick-login buttons are available on the login page for one-click access.
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Client Shells                        │
+│  ┌─────────────────┐  ┌──────────┐  ┌──────────┐       │
+│  │  React + Vite   │  │ Capacitor│  │ Capacitor│       │
+│  │  Web Dashboard  │  │  Android │  │   iOS    │       │
+│  └────────┬────────┘  └────┬─────┘  └────┬─────┘       │
+└───────────┼─────────────────┼──────────────┼────────────┘
+            │                 │              │
+            │       JWT Bearer / HTTP REST                │
+            ▼                 ▼              ▼
+┌─────────────────────────────────────────────────────────┐
+│              FastAPI Asynchronous Gateway                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────┐ │
+│  │   Auth   │  │   Tasks  │  │   Audit  │  │   AI   │ │
+│  │  Router  │  │  Router  │  │  Router  │  │ Router │ │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───┬────┘ │
+└────────┼──────────────┼────────────┼──────────────┼─────┘
+         │              │            │              │
+         ▼              ▼            ▼              ▼
+┌─────────────────────────────────────────────────────────┐
+│             Storage & AI Engine Layer                    │
+│  ┌──────────────────┐  ┌────────────────────────────┐   │
+│  │   SQLite + WAL   │  │  AI: Gemini → Ollama ↻     │   │
+│  │  Immutable Audit │  │  LangChain + LangGraph      │   │
+│  └──────────────────┘  └────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Frontend — React + Vite (`src/`)
+- **React 19** + **Vite 8** with **React Router v7**
+- **Tailwind CSS v4** with custom Material Design token system
+- **Google Fonts**: Inter (body), Geist (headings/labels)
+- **Material Symbols** (variable icon font)
+- **Role-based routing**: `/manager` and `/employee` dashboards
+- **JWT Auth** with secure token management via `AuthContext`
+- **Axios** HTTP client with auto-injecting JWT interceptor
+- **ReactMarkdown** for AI-generated briefings
+
+### Backend — FastAPI (`backend/`)
+| Layer | Directory | Purpose |
+|-------|-----------|---------|
+| **Routers** | `backend/app/routers/` | API endpoints (auth, tasks, logs, ai, audit, chatbot) |
+| **Services** | `backend/app/services/` | Business logic & AI orchestration |
+| **Repositories** | `backend/app/repositories/` | SQL data access layer |
+| **Models** | `backend/app/models/` | SQLModel table definitions |
+| **Schemas** | `backend/app/schemas/` | Pydantic request/response schemas |
+| **Core** | `backend/app/core/` | LLM factory, security, document parser |
+
+### Native Mobile — Capacitor (`ios/`, `android/`)
+- Capacitor bridges the React app into native iOS (Xcode/Swift) and Android (Gradle/Java)
+- `capacitor.config.json` points web directory to `dist/`
+- Run `npm run mobile:sync` to build and sync
+
+---
+
+## 🧠 AI Intelligence Layer
+
+Aegis uses a **dual-provider AI architecture** with automatic fallback:
+
+| Provider | Role | Requirement |
+|----------|------|-------------|
+| **Google Gemini 2.5 Flash** | Primary | `GEMINI_API_KEY` in `.env` |
+| **Ollama (llama3.2:3b)** | Auto-fallback | Running `ollama serve` |
+
+If Gemini is **unavailable, quota-exhausted (429), or misconfigured**, the system **silently falls back** to the local Ollama model using LangChain's `.with_fallbacks()` — no errors, no disruption.
+
+### AI Features
+
+| Feature | Implementation | Endpoint |
+|---------|---------------|----------|
+| **Work Log Verification** | Evaluates employee logs → High/Medium/Low confidence | `POST /api/logs/{task_id}` |
+| **Manager Briefing** | Plain-English "Where's my team?" summary | `GET /api/ai/summary` |
+| **LangGraph Agent** | Risk analysis → anomaly detection → recommendations | `GET /api/ai/agent-analysis` |
+| **Smart Task Triage** | Suggests priority & deadline from description | `POST /api/ai/suggest-priority` |
+| **AI Chatbot** | Conversational task management via LangChain | `POST /api/ai/chatbot` |
+
+---
+
+## 🎨 UI Design System
+
+The frontend uses a polished **Material Design 3-inspired** system:
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--color-primary` | `#004ac6` | Buttons, links, active states |
+| `--color-surface` | `#f8f9ff` | Page backgrounds |
+| `--color-error` | `#ba1a1a` | Overdue, low confidence |
+| `--color-tertiary` | `#943700` | Flagged items, warnings |
+| Glass effect | `backdrop-blur-xl` | Cards, navbars, modals |
+| Bento grid | 12-column CSS Grid | Dashboard layout |
+| Focus ring | `ring-4 ring-[#004ac6]/8` | Interactive elements |
+
+### Key UI Components
+
+- **Login Page** — Premium glass card with gradient orbs, demo quick-login buttons
+- **Manager Dashboard** — 4-tab navigation (Home, Tasks, Audit Trail, Settings), AI briefing, task metrics, team capacity bars, workload chart, AI verification detail panel, floating chatbot
+- **Employee Dashboard** — Glass sidebar, search, task cards with selection, work log submission form, AI verification history
+- **Chat Widget** — Floating AI supervisor with markdown responses
+- **Modals** — Animated task assignment form with backdrop blur
+
+---
+
+## 🔐 Authentication & Security
+
+- **JWT (HS256)** tokens with 24-hour expiry
+- **Role-Based Access Control (RBAC)**: Manager vs Employee routes
+- Tokens stored in `localStorage` as `wf_token`
+- Protected routes enforce authentication + role check
+- Immutable audit trail for every operation
+
+---
+
+## 🗄️ Database
+
+- **SQLite** with **WAL mode** for high-concurrency reads
+- **SQLModel** ORM (SQLAlchemy + Pydantic)
+- **Tables**: `User`, `Task`, `WorkLog`, `AuditLog`
+- Background daemon auto-marks overdue tasks on boot
+
+---
+
+## 📊 Simulation Suite
+
 ```bash
 cd backend
 uv run python scripts/simulate_user.py
 ```
 
-### What the Simulation Verifies:
-1. **Sarah Jenkins** registers and logs in as the Manager.
-2. **20 unique employee accounts** are registered across 8 diverse business departments.
-3. **Role-Based Access Control (RBAC)** is validated: Employee attempts to assign tasks are rejected with a strict `403 Forbidden` response.
-4. **15 custom tasks** are assigned across the roster (including overdue alerts).
-5. Employees log in, pull their active dashboards, and submit progress logs with **AI Verification**.
-6. Employees update task statuses (transitioning items to `COMPLETED` and `IN_PROGRESS`).
-7. Sarah Jenkins pulls the dynamic plain-English briefing and **LangGraph agent recommendations**.
-8. Fetches the complete audit trail, displaying **140 tamper-resistant history entries**!
+This simulates the full lifecycle: register manager → onboard 15 employees across 8 departments → assign 15 tasks → submit work logs with AI verification → update statuses → pull AI briefing → LangGraph analysis → 140+ audit trail entries.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 19, Vite 8, Tailwind CSS v4, React Router v7, Axios |
+| **Backend** | Python 3.13, FastAPI, SQLModel, LangChain, LangGraph |
+| **AI** | Google Gemini 2.5 Flash, Ollama (llama3.2:3b) |
+| **Mobile** | Capacitor 8 (iOS + Android) |
+| **Database** | SQLite + WAL mode |
+| **Auth** | JWT (HS256), bcrypt |
+
+---
+
+## 📁 Project Structure
+
+```
+├── backend/
+│   └── app/
+│       ├── routers/      # API endpoints
+│       ├── services/     # Business logic
+│       ├── repositories/ # Data access
+│       ├── models/       # SQL tables
+│       ├── schemas/      # Pydantic schemas
+│       ├── core/         # LLM factory, security
+│       ├── middleware/   # Auth middleware
+│       ├── main.py       # App entrypoint
+│       ├── config.py     # Settings
+│       └── database.py   # DB engine
+├── src/                  # React frontend
+│   ├── pages/            # Dashboard pages
+│   ├── components/       # Shared components
+│   ├── context/          # Auth context
+│   ├── api/              # API client
+│   └── index.css         # Design system
+├── ios/                  # Capacitor iOS shell
+├── android/              # Capacitor Android shell
+├── scripts/              # Demo & simulation
+└── stitch_reference/     # Design mockups
+```
