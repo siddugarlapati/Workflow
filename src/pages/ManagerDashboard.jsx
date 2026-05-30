@@ -1168,13 +1168,6 @@ export default function ManagerDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="font-bold text-[#0b1c30] block mb-xs">Cognitive Checking Mode</label>
-                    <select className="w-full p-sm bg-white border border-[#c3c6d7] rounded-lg">
-                      <option>JEPA Predictive Heuristics + Meta-Adaptation (Strict)</option>
-                      <option>Standard NLP Sentiment Verification (Permissive)</option>
-                    </select>
-                  </div>
-                  <div>
                     <label className="font-bold text-[#0b1c30] block mb-xs">Playwright Browser Headless Scraper</label>
                     <div className="flex items-center gap-sm">
                       <input type="checkbox" defaultChecked className="rounded text-[#004ac6] focus:ring-[#004ac6]" />
