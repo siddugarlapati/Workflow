@@ -56,6 +56,11 @@ class Settings(BaseSettings):
             "http://127.0.0.1:8501",
             "http://localhost:5173",
             "http://127.0.0.1:5173",
+            "https://workflow-platform-ashen.vercel.app",
+            "https://workflow-platform-ashen.vercel.app/",
+            "https://workflow-platform-ashen.vercel.app:443",
+            "https://workflow-platform-9crmi70wo-siddugarlapati09-gmailcoms-projects.vercel.app",
+            "https://workflow-platform-9crmi70wo-siddugarlapati09-gmailcoms-projects.vercel.app/",
         ]
 
 
