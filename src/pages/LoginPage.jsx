@@ -2,13 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
-import styles from './LoginPage.module.css';
-
-// MOCK: remove this block and use the real API call below when backend is ready
-const MOCK_USERS = [
-  { id: '1', name: 'Alice Manager', email: 'manager@demo.com', role: 'manager', password: 'password' },
-  { id: '2', name: 'Bob Employee', email: 'employee@demo.com', role: 'employee', password: 'password' },
-];
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -25,76 +18,105 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // ── MOCK LOGIN ──────────────────────────────────────────────────────────
-      // TODO: replace this block with the real API call below when backend is ready
-      await new Promise((r) => setTimeout(r, 400)); // simulate network delay
-      const found = MOCK_USERS.find(
-        (u) => u.email === email && u.password === password
-      );
-      if (!found) throw new Error('Invalid email or password');
-      const { password: _pw, ...userData } = found;
-      const mockToken = `mock-jwt-${userData.role}-${Date.now()}`;
-      login(mockToken, userData);
-      // ── END MOCK ────────────────────────────────────────────────────────────
-
-      // ── REAL API CALL (uncomment when backend is ready) ─────────────────────
-      // const { data } = await client.post('/api/auth/login', { email, password });
-      // login(data.token, data.user);
-      // ── END REAL API ────────────────────────────────────────────────────────
-
-      navigate(userData.role === 'manager' ? '/manager' : '/employee');
+      const { data } = await client.post('/api/auth/login', { email, password });
+      login(data.access_token, data.user);
+      navigate(data.user.role === 'manager' ? '/manager' : '/employee');
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.detail || err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.logo}>
-          <span className={styles.logoIcon}>⚡</span>
-          <h1 className={styles.logoText}>WorkFlow</h1>
-        </div>
-        <p className={styles.tagline}>Task &amp; Accountability Platform</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9ff] text-[#0b1c30] p-gutter relative overflow-hidden font-body-md">
+      {/* Background blobs */}
+      <div className="absolute top-[-10%] right-[-5%] w-[45%] h-[50%] bg-[#004ac6]/5 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] left-[-5%] w-[35%] h-[40%] bg-[#d3e4fe]/40 blur-[100px] rounded-full pointer-events-none"></div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.field}>
-            <label htmlFor="email">Email</label>
+      <div className="w-full max-w-[420px] bg-white border border-[#e2e8f0] rounded-xl p-md shadow-sm relative z-10 transition-all hover:shadow-md">
+        <div className="text-center mb-lg">
+          <div className="flex items-center justify-center gap-sm mb-xs">
+            <div className="w-10 h-10 rounded-lg bg-[#004ac6] flex items-center justify-center text-white">
+              <span className="material-symbols-outlined font-bold text-2xl">bolt</span>
+            </div>
+            <h1 className="font-headline-lg text-headline-lg text-[#0b1c30] tracking-tight">WorkFlow</h1>
+          </div>
+          <p className="font-body-sm text-body-sm text-[#434655] tracking-wide uppercase">
+            AI-Powered Task & Accountability
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-md">
+          <div className="flex flex-col gap-xs">
+            <label className="font-label-md text-label-md text-[#0b1c30]" htmlFor="email">
+              Corporate Email
+            </label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
+              className="w-full p-sm bg-white border border-[#c3c6d7] rounded-lg text-body-sm focus:outline-none focus:border-[#004ac6] focus:ring-2 focus:ring-[#004ac6]/10 transition-all"
               required
               autoFocus
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="password">Password</label>
+          <div className="flex flex-col gap-xs">
+            <label className="font-label-md text-label-md text-[#0b1c30]" htmlFor="password">
+              Password
+            </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              className="w-full p-sm bg-white border border-[#c3c6d7] rounded-lg text-body-sm focus:outline-none focus:border-[#004ac6] focus:ring-2 focus:ring-[#004ac6]/10 transition-all"
               required
             />
           </div>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <div className="p-sm bg-[#ffdad6] border border-[#ba1a1a]/20 text-[#ba1a1a] rounded-lg text-body-sm font-semibold flex items-center gap-xs">
+              <span className="material-symbols-outlined text-[18px]">report</span>
+              {error}
+            </div>
+          )}
 
-          <button type="submit" className={styles.btn} disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign In'}
+          <button
+            type="submit"
+            className="w-full py-sm bg-[#004ac6] hover:bg-[#003ea8] text-white font-label-md text-label-md font-bold rounded-lg transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-xs"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-[18px]">sync</span>
+                Verifying Credentials...
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[18px]">login</span>
+                Sign In to Workspace
+              </>
+            )}
           </button>
         </form>
 
-        <p className={styles.hint}>
-          Demo — manager@demo.com / employee@demo.com &nbsp;|&nbsp; password: <code>password</code>
-        </p>
+        <div className="mt-lg pt-md border-t border-[#e2e8f0] text-center">
+          <p className="font-label-sm text-label-sm text-[#434655] mb-xs">
+            DEMO SIGN-IN CREDENTIALS
+          </p>
+          <div className="bg-[#eff4ff] p-sm rounded-lg text-left text-body-sm text-[#003ea8] space-y-1">
+            <div>🔑 <strong>Manager:</strong> <code>manager@demo.com</code></div>
+            <div>🔑 <strong>Employee:</strong> <code>employee1@demo.com</code></div>
+            <div className="border-t border-[#004ac6]/10 pt-xs mt-xs text-center text-[12px]">
+              Password for both: <code className="font-bold">password123</code>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WorkFlow | Task Control Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Geist', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#943700",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "on-primary-container": "#eeefff",
+                        "tertiary-container": "#bc4800",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "on-tertiary-container": "#ffede6",
+                        "surface-bright": "#f8f9ff",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#d3e4fe",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-container-low": "#eff4ff",
+                        "surface": "#f8f9ff",
+                        "on-background": "#0b1c30",
+                        "outline": "#737686",
+                        "on-primary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-fixed": "#00174b",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-fixed": "#dae2fd",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdbcd",
+                        "inverse-primary": "#b4c5ff",
+                        "on-tertiary-fixed": "#360f00",
+                        "on-secondary-fixed": "#131b2e",
+                        "surface-dim": "#cbdbf5",
+                        "secondary": "#565e74",
+                        "surface-tint": "#0053db",
+                        "on-surface-variant": "#434655",
+                        "outline-variant": "#c3c6d7",
+                        "primary": "#004ac6",
+                        "secondary-container": "#dae2fd",
+                        "primary-container": "#2563eb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "surface-container": "#e5eeff",
+                        "inverse-surface": "#213145",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-fixed-variant": "#3f465c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "md": "24px",
+                        "lg": "40px",
+                        "margin": "32px",
+                        "base": "8px",
+                        "sm": "12px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "headline-sm": ["Geist"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-gutter py-base h-16 sticky top-0 z-40 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-margin">
+<span class="font-headline-sm text-headline-sm font-black text-primary">WorkFlow</span>
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 w-80 font-body-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Search tasks or team..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2 rounded-lg font-label-md hover:opacity-90 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]" data-icon="auto_awesome">auto_awesome</span>
+                Ask AI
+            </button>
+<div class="flex items-center gap-sm">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User Avatar" data-alt="A professional headshot of a corporate manager in a high-tech office setting. The lighting is crisp and natural, highlighting a clean-cut appearance. The background shows a blurred, modern glass-walled architectural environment with cool blue and slate grey tones, reflecting a sophisticated and authoritative atmosphere consistent with the WorkFlow design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7JVb7CFEVyhgjCvJCVQVyoMNxU8QonwnyMPziLV3Iu8QHZdPoJhq6A-DKPhEvevMq5PInQkaQVh7aIjLyBjNfXmFJEF4Ow_jY5QYxHX6zHICQh_Oxm2iJZ2n3Xa6javwYAAnXpZiGicjBeZUkHyTvaJRuOW5ITA4bw5JnQm4yhjMDhuLYg9X28i_Wma7bMUF3KaqIg6Z68FNMrGRfn5SbXfI2d-XC6UasT_bmvDtDBdDb-qZB7j0n7gvEOl_UvnRvPlj02WSeLQ4D"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-full w-64 border-r border-outline-variant bg-surface py-md px-sm shrink-0">
+<div class="px-sm mb-lg">
+<div class="flex items-center gap-3 p-2 bg-surface-container-low rounded-xl mb-base">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="manager">network_manage</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Alex Chen</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Lead Manager</p>
+</div>
+</div>
+<button class="w-full bg-on-background text-white py-3 rounded-lg font-label-md flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                    New Task
+                </button>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-sm py-3 rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high hover:text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex items-center gap-3 px-sm py-3 rounded-lg transition-colors text-primary font-bold border-r-4 border-primary bg-surface-container-low" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+<a class="flex items-center gap-3 px-sm py-3 rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high hover:text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Team</span>
+</a>
+<a class="flex items-center gap-3 px-sm py-3 rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high hover:text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">Audit Trail</span>
+</a>
+</nav>
+<div class="mt-auto pt-md border-t border-outline-variant">
+<a class="flex items-center gap-3 px-sm py-3 rounded-lg transition-colors text-on-surface-variant hover:bg-surface-container-high hover:text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto p-gutter bg-background scroll-smooth">
+<div class="max-w-7xl mx-auto space-y-gutter">
+<!-- Page Header & Filters -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-background">Task Control Center</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Real-time surveillance and accountability metrics for your engineering team.</p>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-2 px-4 py-2 bg-error-container text-on-error-container rounded-lg font-label-sm border border-transparent hover:border-error transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="warning">warning</span>
+                            At Risk
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface rounded-lg font-label-sm border border-outline-variant hover:bg-surface-container-highest transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility_off">visibility_off</span>
+                            AI Flagged
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-white text-on-surface rounded-lg font-label-sm border border-outline-variant hover:bg-surface-container-low transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span>
+                            All Filters
+                        </button>
+</div>
+</div>
+<!-- Metrics Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter">
+<div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm">
+<p class="text-on-surface-variant font-label-sm uppercase tracking-wider">Total Active</p>
+<h3 class="font-headline-md text-headline-md mt-1">124</h3>
+<div class="mt-2 text-primary font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span>
+                            +12% this week
+                        </div>
+</div>
+<div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm">
+<p class="text-on-surface-variant font-label-sm uppercase tracking-wider">AI Reliability</p>
+<h3 class="font-headline-md text-headline-md mt-1">98.2%</h3>
+<div class="mt-2 text-primary font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="verified">verified</span>
+                            Above target
+                        </div>
+</div>
+<div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm border-l-4 border-l-error">
+<p class="text-on-surface-variant font-label-sm uppercase tracking-wider">High Risk</p>
+<h3 class="font-headline-md text-headline-md mt-1 text-error">7</h3>
+<div class="mt-2 text-error font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="report">report</span>
+                            Immediate action
+                        </div>
+</div>
+<div class="bg-white p-md rounded-xl border border-outline-variant shadow-sm">
+<p class="text-on-surface-variant font-label-sm uppercase tracking-wider">Completed (24h)</p>
+<h3 class="font-headline-md text-headline-md mt-1">42</h3>
+<div class="mt-2 text-on-secondary-container font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+                            On schedule
+                        </div>
+</div>
+</div>
+<!-- Main Data Grid -->
+<div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-md py-4 font-label-sm text-on-surface-variant uppercase border-b border-outline-variant">Task Name</th>
+<th class="px-md py-4 font-label-sm text-on-surface-variant uppercase border-b border-outline-variant">Assigned To</th>
+<th class="px-md py-4 font-label-sm text-on-surface-variant uppercase border-b border-outline-variant">Deadline</th>
+<th class="px-md py-4 font-label-sm text-on-surface-variant uppercase border-b border-outline-variant">Priority</th>
+<th class="px-md py-4 font-label-sm text-on-surface-variant uppercase border-b border-outline-variant">AI Confidence</th>
+<th class="px-md py-4 font-label-sm text-on-surface-variant uppercase border-b border-outline-variant text-center">Status</th>
+<th class="px-md py-4 font-label-sm text-on-surface-variant uppercase border-b border-outline-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant font-body-sm">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-md py-5">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Core API Infrastructure Refactor</span>
+<span class="text-[12px] text-on-surface-variant">Ticket #WF-4029</span>
+</div>
+</td>
+<td class="px-md py-5">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img alt="Dev Avatar" data-alt="A detailed portrait of a senior software developer in a focused work environment. They are wearing professional casual attire, and the scene is lit by the soft glow of multiple monitors. The overall aesthetic is clean and modern, using a color palette of white, deep greys, and royal blue accents, emphasizing the technical and professional nature of the task management interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDP5NKoH2hCaFgf115F-YcuMDEJpSD4nA1gkfVPFe4aNZ-wFUZVNVZuKmFshleLK4j4tBdaTOt2W2iPVV79z_gKRlKd0eXI9bPvcs-IJ7u09h3cc0n48v7apWsqm2UelogiTpIWxkQ-bPwortQirCV9nCWNWy3qFSZonmUDuJnBCtgMEqfSERr97X6fu3jMDFrieRh-eoh3xZJOeZ9DH5iEeT2SE3qGYlvBZcAKTJOQbK3ApMCCAmPO3Hrqowa_Z07ZXx_8iytMU1Rr"/>
+</div>
+<span>James Wilson</span>
+</div>
+</td>
+<td class="px-md py-5 text-on-surface-variant">Oct 24, 2023</td>
+<td class="px-md py-5">
+<span class="px-2 py-1 rounded bg-error-container text-on-error-container text-[11px] font-bold uppercase">High</span>
+</td>
+<td class="px-md py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="signal_cellular_alt" style="font-variation-settings: 'FILL' 1;">signal_cellular_alt</span>
+<span class="font-medium">94%</span>
+</div>
+</td>
+<td class="px-md py-5 text-center">
+<span class="px-3 py-1 bg-surface-container-high text-on-surface rounded-full text-[12px] font-medium border border-outline-variant">In Progress</span>
+</td>
+<td class="px-md py-5 text-right relative">
+<button class="p-2 hover:bg-white rounded-full transition-all group-hover:shadow-sm" onclick="toggleAudit('audit-1')">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+<!-- Mini Audit Trail -->
+<div class="hidden absolute right-full top-0 mr-2 w-64 bg-white border border-outline-variant shadow-xl rounded-xl z-50 p-4 text-left" id="audit-1">
+<p class="font-label-sm text-on-surface-variant mb-3 uppercase tracking-tight">Recent Activity</p>
+<div class="space-y-3">
+<div class="flex gap-2 border-l-2 border-primary pl-2">
+<div class="text-[11px]">
+<p class="text-on-surface font-semibold">AI Flagged Risk</p>
+<p class="text-on-surface-variant">Dependency bottleneck detected in Node.js module.</p>
+<p class="text-[10px] text-outline mt-1">2 mins ago</p>
+</div>
+</div>
+<div class="flex gap-2 border-l-2 border-outline-variant pl-2">
+<div class="text-[11px]">
+<p class="text-on-surface font-semibold">Status Update</p>
+<p class="text-on-surface-variant">Moved from 'Backlog' to 'In Progress' by J. Wilson</p>
+<p class="text-[10px] text-outline mt-1">1 hour ago</p>
+</div>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 2 (At Risk) -->
+<tr class="hover:bg-error-container/20 bg-error-container/5 transition-colors group border-l-4 border-l-error">
+<td class="px-md py-5">
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-semibold text-on-surface">Database Migration - Stage 2</span>
+<span class="material-symbols-outlined text-error text-[16px]" data-icon="priority_high">priority_high</span>
+</div>
+<span class="text-[12px] text-on-surface-variant">Ticket #WF-3891</span>
+</div>
+</td>
+<td class="px-md py-5">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img alt="Dev Avatar" data-alt="A high-quality image of a female software engineer in a modern, light-filled office. She is looking intently at a screen off-camera, representing deep focus. The environment is minimalist and high-tech, with a neutral color scheme of soft whites and cool greys, occasionally accented by a royal blue desk accessory to match the brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGjaLsz97PoQIs3OJyXsQkVMdk5EKig5LdoVfkp05pFBFAHw3O9iD8SZ_Fys2-ka4a0vSjnlpp4W2KN-oE7i0ZuYIjRVOcXdCete1q_Ac9gnkIHPdPl6FnTrEGB1ZkMoFpB915pBJp_MeN-3X9--vsoF-woOUfZ1pf1H7rb5jrONA7-a0tL-99KwfNNFXONKV_IOfS9liv_bsbJuXvT1ipyUHTtFFLhSB_KPyhi4rDlI9Gc93YacA_DkWTyO8HcLTMIUzx1Ma18Hd1"/>
+</div>
+<span>Sarah Jenkins</span>
+</div>
+</td>
+<td class="px-md py-5 text-error font-semibold">Overdue (2h)</td>
+<td class="px-md py-5">
+<span class="px-2 py-1 rounded bg-error-container text-on-error-container text-[11px] font-bold uppercase">High</span>
+</td>
+<td class="px-md py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[20px]" data-icon="signal_cellular_1_bar" style="font-variation-settings: 'FILL' 1;">signal_cellular_1_bar</span>
+<span class="font-medium text-error">32%</span>
+</div>
+</td>
+<td class="px-md py-5 text-center">
+<span class="px-3 py-1 bg-error text-white rounded-full text-[12px] font-medium">Stalled</span>
+</td>
+<td class="px-md py-5 text-right relative">
+<button class="p-2 hover:bg-white rounded-full transition-all" onclick="toggleAudit('audit-2')">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+<div class="hidden absolute right-full top-0 mr-2 w-64 bg-white border border-outline-variant shadow-xl rounded-xl z-50 p-4 text-left" id="audit-2">
+<p class="font-label-sm text-on-surface-variant mb-3 uppercase tracking-tight text-error">Critical Warnings</p>
+<div class="space-y-3">
+<div class="flex gap-2 border-l-2 border-error pl-2">
+<div class="text-[11px]">
+<p class="text-on-surface font-semibold">AI Prediction</p>
+<p class="text-on-surface-variant">Task likely to fail due to resource conflict.</p>
+<p class="text-[10px] text-outline mt-1">10 mins ago</p>
+</div>
+</div>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-md py-5">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">UX Design System Expansion</span>
+<span class="text-[12px] text-on-surface-variant">Ticket #WF-4100</span>
+</div>
+</td>
+<td class="px-md py-5">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img alt="Dev Avatar" data-alt="A sharp, minimalist photograph of a design professional in a modern workspace. The lighting is crisp, and the composition focuses on the subject's thoughtful expression. The surrounding office is characterized by clean lines, glass surfaces, and a palette of cool grays and white, perfectly fitting the WorkFlow enterprise aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2cFmHGHXKm5u4QyybjVXNqW1QF_PYTSjnbHuiykIROO6k8ynv2zVhS8t4LS9yx7O7I-OdXuYvb7hISgulvC5AMBo5tq-i9Es3FA1QjPY_Yr4Nfa32cBr_V8dR5hxUORxNdmGmFrqLbKkwifog3M_-xxufQowztoHUbkhMvQbJ2fydIVT0UW6Ar9jJm3zUrOw0-QIwfrPxD67Nnx_q5qCR5RHVIw67_kYRnNh0TvUiHshGkIC3cFZDa09p3YDog6nO2Wez2QCcilTM"/>
+</div>
+<span>Marcus Thorne</span>
+</div>
+</td>
+<td class="px-md py-5 text-on-surface-variant">Oct 26, 2023</td>
+<td class="px-md py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-on-surface-variant text-[11px] font-bold uppercase">Medium</span>
+</td>
+<td class="px-md py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="signal_cellular_alt" style="font-variation-settings: 'FILL' 1;">signal_cellular_alt</span>
+<span class="font-medium">88%</span>
+</div>
+</td>
+<td class="px-md py-5 text-center">
+<span class="px-3 py-1 bg-surface-container-high text-on-surface rounded-full text-[12px] font-medium border border-outline-variant">Planning</span>
+</td>
+<td class="px-md py-5 text-right relative">
+<button class="p-2 hover:bg-white rounded-full transition-all" onclick="toggleAudit('audit-3')">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+<div class="hidden absolute right-full top-0 mr-2 w-64 bg-white border border-outline-variant shadow-xl rounded-xl z-50 p-4 text-left" id="audit-3">
+<p class="font-label-sm text-on-surface-variant mb-3 uppercase tracking-tight">Recent Activity</p>
+<div class="space-y-3">
+<div class="flex gap-2 border-l-2 border-primary pl-2">
+<div class="text-[11px]">
+<p class="text-on-surface font-semibold">User Mention</p>
+<p class="text-on-surface-variant">@Marcus: "Drafted initial Bento Grid patterns."</p>
+<p class="text-[10px] text-outline mt-1">4 hours ago</p>
+</div>
+</div>
+</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination -->
+<div class="px-md py-4 bg-surface-container-low flex justify-between items-center border-t border-outline-variant">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 1-10 of 124 tasks</span>
+<div class="flex gap-2">
+<button class="p-1 hover:bg-white rounded border border-outline-variant text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="px-3 py-1 bg-primary text-white rounded font-label-sm">1</button>
+<button class="px-3 py-1 hover:bg-white rounded font-label-sm border border-transparent hover:border-outline-variant">2</button>
+<button class="px-3 py-1 hover:bg-white rounded font-label-sm border border-transparent hover:border-outline-variant">3</button>
+<button class="p-1 hover:bg-white rounded border border-outline-variant text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Intelligence View (Bento Row) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<div class="lg:col-span-2 bg-white rounded-xl border border-outline-variant shadow-sm p-md">
+<div class="flex justify-between items-center mb-md">
+<h4 class="font-headline-sm text-headline-sm">Workload Distribution</h4>
+<span class="material-symbols-outlined text-outline" data-icon="info">info</span>
+</div>
+<div class="h-48 flex items-end justify-between gap-4 px-4 pb-4 border-b border-outline-variant">
+<div class="w-full bg-primary/20 rounded-t-lg relative group h-[60%]">
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-inverse-surface text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">12 Tasks</div>
+</div>
+<div class="w-full bg-primary/40 rounded-t-lg relative group h-[85%]">
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-inverse-surface text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">18 Tasks</div>
+</div>
+<div class="w-full bg-primary rounded-t-lg relative group h-[45%]">
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-inverse-surface text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">9 Tasks</div>
+</div>
+<div class="w-full bg-primary/60 rounded-t-lg relative group h-[70%]">
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-inverse-surface text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">15 Tasks</div>
+</div>
+<div class="w-full bg-error/40 rounded-t-lg relative group h-[95%]">
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-error text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">CRITICAL</div>
+</div>
+</div>
+<div class="flex justify-between mt-2 font-label-sm text-on-surface-variant">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span>
+</div>
+</div>
+<div class="bg-primary text-white rounded-xl shadow-sm p-md flex flex-col justify-between overflow-hidden relative">
+<div class="absolute top-0 right-0 p-8 opacity-10 scale-150">
+<span class="material-symbols-outlined text-[120px]" data-icon="bolt">bolt</span>
+</div>
+<div class="z-10">
+<h4 class="font-headline-sm text-headline-sm">AI Suggestion</h4>
+<p class="font-body-sm mt-sm opacity-90">Based on team velocity, we recommend re-assigning <span class="font-bold">Database Migration</span> to Marcus Thorne to avoid deadline breach.</p>
+</div>
+<button class="z-10 mt-md bg-white text-primary px-4 py-2 rounded-lg font-label-md hover:bg-surface-container-low transition-all">
+                            Optimize Workload
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Notification Overlay (Micro-interaction Example) -->
+<div class="fixed bottom-gutter right-gutter translate-y-20 opacity-0 transition-all duration-300 z-50" id="success-toast">
+<div class="bg-inverse-surface text-white px-md py-4 rounded-lg shadow-2xl flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<p class="font-label-md">Task successfully assigned</p>
+</div>
+</div>
+<script>
+        function toggleAudit(id) {
+            const el = document.getElementById(id);
+            const allAudits = document.querySelectorAll('[id^="audit-"]');
+            
+            allAudits.forEach(audit => {
+                if(audit.id !== id) audit.classList.add('hidden');
+            });
+            
+            el.classList.toggle('hidden');
+        }
+
+        // Close audits when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.relative')) {
+                const allAudits = document.querySelectorAll('[id^="audit-"]');
+                allAudits.forEach(audit => audit.classList.add('hidden'));
+            }
+        });
+
+        // Simple Toast Demo
+        function showToast() {
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body></html>

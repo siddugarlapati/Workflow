@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.table import Table
 
 console = Console()
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8005"
 
 async def run_e2e_test() -> None:
     console.print("[bold purple]⚡ Starting WorkFlow E2E Suite...[/bold purple]\n")
@@ -55,11 +55,20 @@ async def run_e2e_test() -> None:
     # ── Step 3: Manager Assigns Task ───────────────────────────────────────────
     if manager_token:
         try:
-            # We fetch profiles to get the correct UUID for employee1
-            # Or use the seeded UUID: "2b9213bc-3294-4395-8178-0e95c1c0451e"
-            employee_id = "2b9213bc-3294-4395-8178-0e95c1c0451e"
             headers = {"Authorization": f"Bearer {manager_token}"}
             async with httpx.AsyncClient(timeout=10.0) as client:
+                # Dynamically fetch employee UUID
+                emp_resp = await client.get(f"{BASE_URL}/api/auth/employees", headers=headers)
+                employee_id = None
+                if emp_resp.status_code == 200:
+                    for emp in emp_resp.json():
+                        if emp["email"] == "employee1@demo.com":
+                            employee_id = emp["id"]
+                            break
+                
+                if not employee_id:
+                    employee_id = "2b9213bc-3294-4395-8178-0e95c1c0451e" # Fallback
+
                 task_data = {
                     "title": "E2E Automated Task - Logistics Reconciliation",
                     "description": "Cross-reference transit records from yesterday's shipments in warehouse B.",

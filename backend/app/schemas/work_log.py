@@ -18,6 +18,7 @@ class LogResponse(BaseModel):
     employee_id: uuid.UUID
     employee_name: str | None = None
     log_text: str
+    file_name: str | None = None
     ai_confidence: AIConfidence
     ai_feedback: str | None
     ai_verified_at: datetime | None

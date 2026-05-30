@@ -28,6 +28,7 @@ class WorkLog(SQLModel, table=True):
     task_id: uuid.UUID = Field(foreign_key="tasks.id", index=True)
     employee_id: uuid.UUID = Field(foreign_key="profiles.id", index=True)
     log_text: str  # The free-text work log entry
+    file_name: Optional[str] = Field(default=None)
     ai_confidence: AIConfidence = Field(default=AIConfidence.PENDING)
     ai_feedback: Optional[str] = Field(default=None)  # One-sentence AI explanation
     ai_verified_at: Optional[datetime] = Field(default=None)

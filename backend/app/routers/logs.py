@@ -1,7 +1,7 @@
 """WorkFlow — Work Logs Router."""
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -15,15 +15,39 @@ router = APIRouter(prefix="/api/logs", tags=["logs"])
 @router.post("/{task_id}", response_model=LogResponse, status_code=201)
 async def submit_log(
     task_id: uuid.UUID,
-    data: LogSubmit,
+    request: Request,
     current: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> LogResponse:
-    """Employee: submit a daily work log for a task. Triggers AI verification."""
+    """Employee: submit a daily work log for a task. Triggers AI verification (supports files)."""
+    content_type = request.headers.get("content-type", "")
+    log_text = ""
+    file_bytes = None
+    file_name = None
+
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        log_text = form.get("log_text", "")
+        if not isinstance(log_text, str):
+            log_text = ""
+        file_field = form.get("file")
+        if file_field and hasattr(file_field, "file"):
+            file_bytes = await file_field.read()
+            file_name = file_field.filename
+    else:
+        # Fallback to standard JSON parsing (for tests/API compatibility)
+        try:
+            body = await request.json()
+            log_text = body.get("log_text", "")
+        except Exception:
+            pass
+
     return await LogService(session).submit(
         task_id=task_id,
         employee_id=current.id,
-        data=data,
+        log_text=log_text,
+        file_bytes=file_bytes,
+        file_name=file_name,
     )
 
 

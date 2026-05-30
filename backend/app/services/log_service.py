@@ -16,6 +16,9 @@ from app.services.ai_service import RAGService, verifyLog
 logger = structlog.get_logger()
 
 
+from app.core.document_parser import extract_text_from_document
+
+
 def _log_to_response(log: WorkLog) -> LogResponse:
     return LogResponse(
         id=log.id,
@@ -24,6 +27,7 @@ def _log_to_response(log: WorkLog) -> LogResponse:
         employee_id=log.employee_id,
         employee_name=log.employee.full_name if log.employee else None,
         log_text=log.log_text,
+        file_name=log.file_name,
         ai_confidence=log.ai_confidence,
         ai_feedback=log.ai_feedback,
         ai_verified_at=log.ai_verified_at,
@@ -41,7 +45,9 @@ class LogService:
         self,
         task_id: uuid.UUID,
         employee_id: uuid.UUID,
-        data: LogSubmit,
+        log_text: str,
+        file_bytes: bytes | None = None,
+        file_name: str | None = None,
     ) -> LogResponse:
         # Verify task exists and belongs to this employee
         task = await self.task_repo.get_by_id_with_relations(task_id)
@@ -50,20 +56,47 @@ class LogService:
         if task.assigned_to != employee_id:
             raise ForbiddenException("You can only log work on your own tasks")
 
+        # ── Parse document if uploaded ────────────────────────────────────────
+        full_text = log_text
+        if file_bytes and file_name:
+            try:
+                extracted_text = extract_text_from_document(file_bytes, file_name)
+                # Combine employee note and extracted document proof
+                if log_text.strip():
+                    full_text = f"Employee Notes: {log_text}\n\n[Extracted Document Proof ({file_name})]:\n{extracted_text}"
+                else:
+                    full_text = f"[Extracted Document Proof ({file_name})]:\n{extracted_text}"
+            except Exception as exc:
+                logger.error("log.submit.document_parse_failed", error=str(exc))
+                raise ValueError(f"Could not parse uploaded document: {exc}")
+
+        # Check for empty logs
+        if not full_text or not full_text.strip():
+            raise ValueError("Either a text log or a document proof must be provided")
+
         # Create the log entry
         log = WorkLog(
             task_id=task_id,
             employee_id=employee_id,
-            log_text=data.log_text,
+            log_text=full_text,
+            file_name=file_name,
         )
         log = await self.repo.create(log)
 
         # ── AI Verification (inline, fast enough for 3b model) ───────────────
         try:
-            result = await verifyLog(
+            # Extract criteria if saved by chatbot
+            expected_criteria = None
+            if task.description and "[Expected Verification Criteria]:" in task.description:
+                parts = task.description.split("[Expected Verification Criteria]:")
+                expected_criteria = parts[1].strip()
+
+            from app.core.automated_verifier import run_cognitive_verification
+            result = await run_cognitive_verification(
                 task_title=task.title,
-                task_description=task.description,
-                log_text=data.log_text,
+                task_desc=task.description,
+                log_text=full_text,
+                expected_criteria=expected_criteria
             )
             log.ai_confidence = result.confidence
             log.ai_feedback = result.feedback
@@ -79,12 +112,13 @@ class LogService:
 
         # ── Index in RAG ──────────────────────────────────────────────────────
         await RAGService.index_log(
-            log_text=data.log_text,
+            log_text=full_text,
             metadata={
                 "log_id": str(log.id),
                 "task_id": str(task_id),
                 "task_title": task.title,
                 "employee_id": str(employee_id),
+                "file_name": file_name,
             },
         )
 
@@ -97,7 +131,8 @@ class LogService:
             payload={
                 "task_id": str(task_id),
                 "ai_confidence": log.ai_confidence,
-                "log_preview": data.log_text[:100],
+                "file_name": file_name,
+                "log_preview": full_text[:100],
             },
         )
 

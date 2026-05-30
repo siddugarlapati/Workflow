@@ -269,6 +269,8 @@ def render_manager_dashboard():
                     else:
                         for l in logs:
                             st.markdown(f"**Submitted at**: {l['submitted_at'][:16].replace('T', ' ')}")
+                            if l.get("file_name"):
+                                st.markdown(f"📎 **Attached Document Proof**: `{l['file_name']}`")
                             st.info(l["log_text"])
                             render_confidence_badge(l["ai_confidence"], l["ai_feedback"])
                             st.markdown("---")
@@ -528,16 +530,39 @@ def render_submit_log_screen():
         height=150,
     )
 
+    uploaded_file = st.file_uploader(
+        "Upload Proof Document (.pdf, .docx, .xlsx, .txt, .csv)",
+        type=["pdf", "docx", "xlsx", "txt", "csv"]
+    )
+
     if st.button("Submit Progress Log", type="primary", use_container_width=True):
-        if not log_text or len(log_text) < 10:
+        if not log_text.strip() and not uploaded_file:
+            st.warning("Please provide a plain-text note OR upload a document proof.")
+            return
+
+        if log_text.strip() and len(log_text) < 10 and not uploaded_file:
             st.warning("Progress log must be at least 10 characters long to contain real progress description.")
             return
 
         with st.spinner("AI is verifying work log entry credibility..."):
-            log_resp = APIClient.post(
-                f"/api/logs/{selected_task_id}",
-                json_data={"log_text": log_text},
-            )
+            data_payload = {"log_text": log_text}
+            files_payload = None
+            if uploaded_file is not None:
+                files_payload = {
+                    "file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)
+                }
+
+            if files_payload:
+                log_resp = APIClient.post_multipart(
+                    f"/api/logs/{selected_task_id}",
+                    data=data_payload,
+                    files=files_payload
+                )
+            else:
+                log_resp = APIClient.post(
+                    f"/api/logs/{selected_task_id}",
+                    json_data=data_payload
+                )
 
             if log_resp.status_code == 201:
                 result = log_resp.json()
@@ -547,7 +572,12 @@ def render_submit_log_screen():
                 st.markdown("### AI Accountability Verdict")
                 render_confidence_badge(result["ai_confidence"], result["ai_feedback"])
             else:
-                st.error("Failed to submit log.")
+                detail_msg = "Failed to submit log."
+                try:
+                    detail_msg += f" Details: {log_resp.json().get('detail')}"
+                except Exception:
+                    pass
+                st.error(detail_msg)
 
 
 if __name__ == "__main__":

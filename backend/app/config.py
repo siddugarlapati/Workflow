@@ -3,7 +3,7 @@ WorkFlow — Application Settings
 Uses pydantic-settings for type-safe, validated configuration.
 """
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.2:3b"
     ollama_embedding_model: str = "nomic-embed-text"
 
+    # ── Gemini ─────────────────────────────────────────────────────────────────
+    gemini_api_key: Optional[str] = None
+
     # ── App ────────────────────────────────────────────────────────────────────
     app_env: Literal["development", "production", "test"] = "development"
     app_host: str = "0.0.0.0"
@@ -47,7 +50,13 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        return [self.frontend_url, "http://localhost:8501", "http://127.0.0.1:8501"]
+        return [
+            self.frontend_url,
+            "http://localhost:8501",
+            "http://127.0.0.1:8501",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
 
 
 @lru_cache

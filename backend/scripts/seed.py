@@ -26,7 +26,7 @@ async def seed_data() -> None:
     # simple async session. Let's do it using AsyncSession.
     from sqlalchemy.ext.asyncio import AsyncSession
     
-    async with AsyncSession(engine) as session:
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         # Check if users already exist
         result = await session.execute(select(User).where(User.email == "manager@demo.com"))
         existing_manager = result.scalar_one_or_none()

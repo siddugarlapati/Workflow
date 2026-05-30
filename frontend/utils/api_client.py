@@ -28,6 +28,8 @@ class APIClient:
         path: str,
         json_data: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+        files: Optional[Dict[str, Any]] = None,
     ) -> httpx.Response:
         url = f"{BACKEND_URL}{path}"
         headers = self.get_headers()
@@ -37,6 +39,8 @@ class APIClient:
                     method=method,
                     url=url,
                     json=json_data,
+                    data=data,
+                    files=files,
                     params=params,
                     headers=headers,
                 )
@@ -52,6 +56,15 @@ class APIClient:
     @classmethod
     def post(cls, path: str, json_data: Optional[Dict[str, Any]] = None) -> httpx.Response:
         return cls.request("POST", path, json_data=json_data)
+
+    @classmethod
+    def post_multipart(
+        cls,
+        path: str,
+        data: Optional[Dict[str, Any]] = None,
+        files: Optional[Dict[str, Any]] = None,
+    ) -> httpx.Response:
+        return cls.request("POST", path, data=data, files=files)
 
     @classmethod
     def patch(cls, path: str, json_data: Optional[Dict[str, Any]] = None) -> httpx.Response:

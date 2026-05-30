@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 import asyncio
 from app.database import close_db, init_db, AsyncSessionLocal
-from app.routers import ai, audit, auth, logs, tasks
+from app.routers import ai, audit, auth, logs, tasks, chatbot
 from app.services.ai_service import RAGService
 from app.services.task_service import TaskService
 
@@ -99,6 +99,7 @@ def create_app() -> FastAPI:
     app.include_router(logs.router)
     app.include_router(ai.router)
     app.include_router(audit.router)
+    app.include_router(chatbot.router)
 
     # ── Health & Root ─────────────────────────────────────────────────────────
     @app.get("/", tags=["root"])

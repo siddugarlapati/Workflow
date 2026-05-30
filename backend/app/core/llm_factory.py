@@ -2,10 +2,12 @@
 WorkFlow — LLM Factory
 Provides a pluggable LLM abstraction so the AI service can swap
 providers without changing business logic.
-Currently supports: Ollama (local)
+Supports: Google Gemini (Primary when API key is present) & Ollama (Fallback)
 """
+import os
 import structlog
 from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.config import settings
 
@@ -15,49 +17,89 @@ logger = structlog.get_logger()
 class LLMFactory:
     """
     Returns a configured LangChain chat model.
-    Strategy pattern — add more providers (Claude, GPT) by adding branches.
+    Funnels model requests to Google Gemini 1.5 Flash if GEMINI_API_KEY is defined,
+    falling back gracefully to local Ollama if missing/mocked.
     """
 
-    _chat_model: ChatOllama | None = None
+    _chat_model = None
 
     @classmethod
-    def get_chat_llm(cls, temperature: float = 0.1) -> ChatOllama:
+    def _get_api_key(cls) -> str | None:
+        key = settings.gemini_api_key or os.environ.get("GEMINI_API_KEY")
+        if not key or key.lower() in ("placeholder", "none", "mock_key") or not key.strip():
+            return None
+        return key.strip()
+
+    @classmethod
+    def get_chat_llm(cls, temperature: float = 0.1):
         """
-        Returns a singleton ChatOllama instance.
-        temperature=0.1 for deterministic, factual AI verification.
+        Returns a configured chat model.
+        Uses ChatGoogleGenerativeAI if a Gemini API key is configured,
+        otherwise falls back to ChatOllama.
         """
-        if cls._chat_model is None:
+        api_key = cls._get_api_key()
+        if api_key:
+            logger.info("llm.initializing", provider="gemini", model="gemini-2.5-flash")
+            return ChatGoogleGenerativeAI(
+                model="gemini-2.5-flash",
+                google_api_key=api_key,
+                temperature=temperature,
+                max_output_tokens=4096,
+            )
+        else:
             logger.info(
                 "llm.initializing",
                 provider="ollama",
                 model=settings.ollama_model,
                 base_url=settings.ollama_base_url,
             )
-            cls._chat_model = ChatOllama(
+            return ChatOllama(
                 model=settings.ollama_model,
                 base_url=settings.ollama_base_url,
                 temperature=temperature,
                 num_predict=600,
-                format="",  # JSON format set per-call when needed
+                format="",
             )
-        return cls._chat_model
 
     @classmethod
-    def get_json_llm(cls) -> ChatOllama:
-        """Returns Ollama configured to output JSON — used for verifyLog."""
-        return ChatOllama(
-            model=settings.ollama_model,
-            base_url=settings.ollama_base_url,
-            temperature=0.0,
-            num_predict=300,
-            format="json",
-        )
+    def get_json_llm(cls):
+        """
+        Returns a chat model configured to output JSON.
+        Uses ChatGoogleGenerativeAI with response_mime_type="application/json" if a Gemini API key is configured,
+        otherwise falls back to ChatOllama with format="json".
+        """
+        api_key = cls._get_api_key()
+        if api_key:
+            logger.info("llm.initializing_json", provider="gemini", model="gemini-2.5-flash")
+            return ChatGoogleGenerativeAI(
+                model="gemini-2.5-flash",
+                google_api_key=api_key,
+                temperature=0.0,
+                max_output_tokens=4096,
+                model_kwargs={"response_mime_type": "application/json"}
+            )
+        else:
+            return ChatOllama(
+                model=settings.ollama_model,
+                base_url=settings.ollama_base_url,
+                temperature=0.0,
+                num_predict=300,
+                format="json",
+            )
 
     @classmethod
     async def health_check(cls) -> dict:
-        """Check if Ollama is reachable and model is available."""
+        """Check the status of configured LLM providers."""
+        api_key = cls._get_api_key()
+        if api_key:
+            return {
+                "status": "ok",
+                "provider": "gemini",
+                "configured_model": "gemini-2.5-flash",
+            }
+        
+        # Local Ollama fallback health check
         import httpx
-
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.get(f"{settings.ollama_base_url}/api/tags")

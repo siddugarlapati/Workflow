@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Axios instance — swap VITE_API_URL in .env to point at your real backend
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8005',
 });
 
 // Attach JWT from localStorage on every request

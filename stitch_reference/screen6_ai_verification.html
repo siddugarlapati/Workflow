@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WorkFlow | AI Verification Report</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;900&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#943700",
+                        "on-secondary-container": "#5c647a",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "on-primary-container": "#eeefff",
+                        "tertiary-container": "#bc4800",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "on-tertiary-container": "#ffede6",
+                        "surface-bright": "#f8f9ff",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#d3e4fe",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-container-low": "#eff4ff",
+                        "surface": "#f8f9ff",
+                        "on-background": "#0b1c30",
+                        "outline": "#737686",
+                        "on-primary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-fixed": "#00174b",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-fixed": "#dae2fd",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdbcd",
+                        "inverse-primary": "#b4c5ff",
+                        "on-tertiary-fixed": "#360f00",
+                        "on-secondary-fixed": "#131b2e",
+                        "surface-dim": "#cbdbf5",
+                        "secondary": "#565e74",
+                        "surface-tint": "#0053db",
+                        "on-surface-variant": "#434655",
+                        "outline-variant": "#c3c6d7",
+                        "primary": "#004ac6",
+                        "secondary-container": "#dae2fd",
+                        "primary-container": "#2563eb",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#7d2d00",
+                        "surface-container": "#e5eeff",
+                        "inverse-surface": "#213145",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-fixed-variant": "#3f465c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "md": "24px",
+                        "lg": "40px",
+                        "margin": "32px",
+                        "base": "8px",
+                        "sm": "12px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "headline-sm": ["Geist"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f8f9ff;
+            color: #0b1c30;
+        }
+        .bento-card {
+            background: #ffffff;
+            border: 1px solid #E2E8F0;
+            padding: 24px;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<aside class="flex flex-col h-screen w-64 border-r border-outline-variant bg-surface sticky top-0 py-md px-sm">
+<div class="mb-lg px-base">
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">WorkFlow</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">AI Accountability</p>
+</div>
+<nav class="flex-1 space-y-base">
+<a class="flex items-center gap-sm p-base rounded-lg transition-colors hover:bg-surface-container-high hover:text-primary text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex items-center gap-sm p-base rounded-lg text-primary font-bold border-r-4 border-primary bg-surface-container-high" href="#">
+<span class="material-symbols-outlined" data-icon="assignment" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-label-md text-label-md">Tasks</span>
+</a>
+<a class="flex items-center gap-sm p-base rounded-lg transition-colors hover:bg-surface-container-high hover:text-primary text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Team</span>
+</a>
+<a class="flex items-center gap-sm p-base rounded-lg transition-colors hover:bg-surface-container-high hover:text-primary text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-md text-label-md">Audit Trail</span>
+</a>
+<a class="flex items-center gap-sm p-base rounded-lg transition-colors hover:bg-surface-container-high hover:text-primary text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-md flex items-center gap-sm px-base">
+<img alt="Manager Profile Picture" class="h-10 w-10 rounded-full object-cover" data-alt="A professional portrait of a senior manager in a bright, modern office. He is wearing a sharp navy blue suit and a crisp white shirt, looking confident and approachable. The background is a blurred high-end corporate environment with soft natural light streaming in through large glass windows, maintaining a clean light-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU2q-3_0vppmLtFGq6IhUGKSLHekFTzXNREvZZGZqoYfVARa60yMNdyoNXGNYjJ4M91fP2F-EvxYOlHk1D-gb6QotLJM4GLO9rs4biQgT2eOizwG0rSvEumGE1SQojeQksYw7NZibo3ID5vHulJ5VviPW_O_gH-_skj8bylHoC8fIKmuwH5i_yXwb5Zww7gf-F5vES-PpGepV0kFC8Nb6Kmjs5u_aKM4aS39T-5DPhHEkRO7A31UqPjN0oCxslp-pqfuCtlcniCrh-"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Alex Rivera</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Director of Ops</p>
+</div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center w-full px-gutter py-base h-16 sticky top-0 z-40 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<button class="md:hidden">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="relative hidden lg:block w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary font-body-sm" placeholder="Search tasks or team members..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-opacity">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="bg-primary text-on-primary px-sm py-xs rounded-lg font-label-md flex items-center gap-xs active:opacity-80 transition-all">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                    Ask AI
+                </button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="p-gutter max-w-7xl mx-auto w-full space-y-gutter">
+<!-- Breadcrumb & Title -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<nav class="flex items-center gap-xs mb-xs text-on-surface-variant font-label-sm">
+<span>Tasks</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span>Employee Report</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-primary">E-4012 Verification</span>
+</nav>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">AI Verification: Jordan Smith</h2>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-sm border border-outline text-on-surface font-label-md rounded-lg hover:bg-surface-container-low transition-colors">
+                        Request Clarification
+                    </button>
+<button class="px-md py-sm bg-inverse-surface text-inverse-on-surface font-label-md rounded-lg shadow-sm hover:opacity-90 active:scale-95 transition-all">
+                        Approve Report
+                    </button>
+</div>
+</div>
+<!-- Bento Grid -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Confidence Signal (Bento Card) -->
+<div class="col-span-12 lg:col-span-4 bento-card rounded-xl flex flex-col justify-between h-[400px]">
+<div>
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-sm text-headline-sm">Confidence Signal</h3>
+<span class="material-symbols-outlined text-primary" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex flex-col items-center justify-center py-md">
+<div class="relative w-48 h-48">
+<!-- Progress Ring SVG -->
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-high" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-width="12"></circle>
+<circle class="text-primary transition-all duration-1000" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-dasharray="552.92" stroke-dashoffset="82.93" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-display-lg text-on-surface">85%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Genuine</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-sm rounded-lg flex items-start gap-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">High confidence based on linguistic complexity and match to outcome-oriented objectives.</p>
+</div>
+</div>
+<!-- AI Feedback Panel (Bento Card) -->
+<div class="col-span-12 lg:col-span-8 bento-card rounded-xl h-[400px] overflow-hidden flex flex-col">
+<h3 class="font-headline-sm text-headline-sm mb-md">AI Feedback &amp; Reasoning</h3>
+<div class="flex-1 space-y-md overflow-y-auto pr-xs">
+<!-- Reasoning Item 1 -->
+<div class="flex gap-md border-b border-outline-variant pb-md">
+<div class="h-8 w-8 rounded bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="checklist">checklist</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface mb-xs">Specific Outcome Mapping</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">The log entry describes specific deliverables (e.g., "Updated CSS schema for Bento cards") that align with the technical requirements of the task.</p>
+<div class="mt-xs bg-surface-container-lowest border border-outline-variant px-sm py-xs rounded inline-block">
+<span class="font-label-sm text-label-sm text-primary">Verified Logic</span>
+</div>
+</div>
+</div>
+<!-- Reasoning Item 2 -->
+<div class="flex gap-md border-b border-outline-variant pb-md">
+<div class="h-8 w-8 rounded bg-tertiary-container/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary text-[20px]" data-icon="psychology">psychology</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface mb-xs">Linguistic Authenticity</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Vocabulary usage shows professional variation. No repetitive robotic templates or 'vague filler' language detected in the narrative sections.</p>
+<div class="mt-xs bg-surface-container-lowest border border-outline-variant px-sm py-xs rounded inline-block">
+<span class="font-label-sm text-label-sm text-primary">Verified Logic</span>
+</div>
+</div>
+</div>
+<!-- Reasoning Item 3 (Minor Flag) -->
+<div class="flex gap-md">
+<div class="h-8 w-8 rounded bg-error-container/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error text-[20px]" data-icon="warning">warning</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface mb-xs">Inconsistent Time Log</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Activity duration (4.5 hrs) is slightly higher than the historical average for similar task complexity (3.2 hrs). Recommend checking secondary commit logs.</p>
+<div class="mt-xs bg-error-container px-sm py-xs rounded inline-block">
+<span class="font-label-sm text-label-sm text-on-error-container">Flagged Anomaly</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side-by-Side View (Bento Card - Large) -->
+<div class="col-span-12 bento-card rounded-xl">
+<div class="flex items-center justify-between mb-lg border-b border-outline-variant pb-md">
+<h3 class="font-headline-sm text-headline-sm">Contextual Comparison</h3>
+<div class="flex items-center gap-base">
+<span class="px-sm py-xs rounded bg-surface-container-highest font-label-sm text-on-surface">Task ID: WF-882</span>
+<span class="px-sm py-xs rounded bg-primary text-on-primary font-label-sm">High Priority</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<!-- Task Description -->
+<div class="space-y-md">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">assignment_turned_in</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Original Task Description</span>
+</div>
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant min-h-[200px]">
+<h4 class="font-headline-sm text-headline-sm mb-sm">Refactor Bento Dashboard UI</h4>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                                    The current dashboard layout lacks information density and feels dated. We need a refactor using the new "Bento Box" philosophy. 
+                                    <br/><br/>
+                                    - Implement 12-column grid.
+                                    - Apply #E2E8F0 borders and 1px width.
+                                    - Ensure typography follows the Geist/Inter hierarchy.
+                                    - Focus on "High Contrast" and "Sharpness."
+                                </p>
+</div>
+</div>
+<!-- Submitted Log -->
+<div class="space-y-md">
+<div class="flex items-center gap-xs text-primary">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Submitted Work Log</span>
+</div>
+<div class="p-md bg-white rounded-lg border-2 border-primary/20 min-h-[200px] shadow-sm relative">
+<div class="absolute top-4 right-4 flex items-center gap-xs">
+<span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary">Live Review</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm mb-sm text-on-surface">Log Entry: 10/24/2023</h4>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed italic">
+                                    "I completed the full refactor of the Audit Trail and Team views. I moved away from the old drop-shadow cards to the Tonal Layer method as requested. 
+                                    <br/><br/>
+                                    Used the #F8FAFC background for the main canvas and implemented the Geist-heavy headline anchors for the TopAppBar. Verified all internal padding is set to 24px/32px for premium feel. 12-column grid is now fluid and reactive to viewport size."
+                                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Stats (Mini Cards) -->
+<div class="col-span-12 md:col-span-4 bento-card rounded-xl p-md flex items-center justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Total Hours</p>
+<p class="font-headline-md text-headline-md text-on-surface">4.5 <span class="text-body-sm font-normal text-on-surface-variant">hrs</span></p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="schedule">schedule</span>
+</div>
+<div class="col-span-12 md:col-span-4 bento-card rounded-xl p-md flex items-center justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Evidence Files</p>
+<p class="font-headline-md text-headline-md text-on-surface">12 <span class="text-body-sm font-normal text-on-surface-variant">items</span></p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="attach_file">attach_file</span>
+</div>
+<div class="col-span-12 md:col-span-4 bento-card rounded-xl p-md flex items-center justify-between">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Peer Context</p>
+<p class="font-headline-md text-headline-md text-on-surface">Top 10%</p>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="trending_up">trending_up</span>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hover effect for bento cards
+            const cards = document.querySelectorAll('.bento-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.borderColor = '#2563EB';
+                    card.style.boxShadow = '0px 4px 12px rgba(37, 99, 235, 0.05)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.borderColor = '#E2E8F0';
+                    card.style.boxShadow = 'none';
+                });
+            });
+
+            // Action button feedback
+            const approveBtn = document.querySelector('button.bg-inverse-surface');
+            approveBtn.addEventListener('click', () => {
+                approveBtn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">sync</span> Processing...';
+                setTimeout(() => {
+                    approveBtn.innerHTML = '<span class="material-symbols-outlined mr-2">check_circle</span> Approved';
+                    approveBtn.classList.replace('bg-inverse-surface', 'bg-primary');
+                }, 1000);
+            });
+        });
+    </script>
+</body></html>
